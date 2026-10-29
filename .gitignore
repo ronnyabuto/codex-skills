@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.artifacts/
+.worktrees/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+auth.json
+hosts.yml
+*.sqlite
+*.sqlite-*
+/codex/notes/
+/codex/sessions/
+/codex/cache/
