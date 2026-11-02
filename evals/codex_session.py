@@ -32,7 +32,7 @@ def analyze(output, returncode, timed_out=False):
         isinstance(item, dict) and all(type(item.get(key)) is int and item[key] >= 0
                                       for key in ("input_tokens", "output_tokens")) for item in usage)
     tokens = sum(item["input_tokens"] + item["output_tokens"] for item in usage) if known else None
-    return dict(error=error, error_details=errors, answers=answers, usage=usage,
+    return dict(num_turns=len(completed) if completed else None, error=error, error_details=errors, answers=answers, usage=usage,
                 reported_tokens=tokens, estimated_cost_usd=None, returncode=returncode,
                 timed_out=timed_out,
                 thread_ids=[e["thread_id"] for e in events

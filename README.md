@@ -103,7 +103,7 @@ python3 -B -m unittest discover -s tests -v
 
 Validation checks manifests, skill frontmatter, contained references, Python
 syntax and exclusion of the inherited recorder. Tests cover memory scoping, realpath containment, concurrent notes, redaction, index freshness, transcript import and superseded notes. evals/cases.json retains independent positive/negative behavior scenarios; the
-paired outcome runner now implements four synthetic enabled/disabled comparisons.
+paired outcome runner now implements five synthetic enabled/disabled comparisons.
 The catalog itself is not a completed model benchmark. Do not run paid agent evaluations without authorization. Each behavioral case needs a fresh disposable fixture and comparison with/without the skill.
 See [paired outcome instructions and rubrics](evals/README.md) and
 [Codex compatibility](references/codex-compatibility.md).

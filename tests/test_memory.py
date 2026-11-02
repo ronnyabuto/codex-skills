@@ -98,6 +98,28 @@ class MemoryTests(unittest.TestCase):
         self.assertIn(path, self.cli("search", "Repository", cwd=worktree).stdout)
         self.assertEqual(self.cli("search", "Repository", cwd=second).stdout, "")
 
+    def test_separate_git_directory_worktrees_share_identity(self):
+        first, tree = self.base / "app", self.base / "task"
+        first.mkdir()
+        subprocess.run(["git", "init", "-q", "--separate-git-dir", str(self.base / "git-storage"), str(first)], check=True)
+        subprocess.run(["git", "-C", str(first), "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                        "commit", "--allow-empty", "-qm", "Fixture"], check=True)
+        subprocess.run(["git", "-C", str(first), "worktree", "add", "-q", "-b", "task", str(tree)], check=True)
+        self.assertEqual(memory.project_id(first), memory.project_id(tree))
+        project = memory.project_id(first)
+        path = self.cli("note", "--title", "Legacy label", body="Stable directory decision", cwd=first).stdout.strip()
+        note = self.root / path
+        legacy = "app-" + project.rsplit("-", 1)[1]
+        note.write_text(note.read_text().replace(project, legacy))
+        before = note.read_bytes()
+        self.assertIn(path, self.cli("search", "Stable directory", cwd=tree).stdout)
+        self.assertIn(path, self.cli("recent", cwd=tree).stdout)
+        hook = subprocess.run([sys.executable, "-B", str(SCRIPT.with_name("hooks.py"))],
+                              input=json.dumps({"hook_event_name": "SessionStart", "cwd": str(tree)}),
+                              text=True, capture_output=True, env=self.env, check=True)
+        self.assertIn("1 notes for this repository", hook.stdout)
+        self.assertEqual(note.read_bytes(), before)
+
     def test_content_hash_freshness_and_deleted_notes(self):
         path = self.cli("note", "--title", "Index", body="alpha-key").stdout.strip()
         self.assertIn(path, self.cli("search", "alpha").stdout)

@@ -26,9 +26,14 @@ def project_id(cwd):
         capture_output=True, text=True,
     )
     identity = Path(result.stdout.strip()).resolve() if result.returncode == 0 else cwd
-    label = identity.parent.name if identity.name == ".git" else cwd.name
+    label = identity.parent.name if identity.name == ".git" else identity.name
     label = re.sub(r"[^a-z0-9]+", "-", label.lower()).strip("-") or "project"
     return f"{label[:40]}-{digest(str(identity))[:16]}"
+
+
+def project_pattern(project):
+    # Older labels depended on cwd for separate Git directories; their hash is still valid.
+    return "*-" + project.rsplit("-", 1)[1]
 
 
 def vault_root():
@@ -321,8 +326,8 @@ def main():
         try:
             filters, params = [], []
             if not args.all_projects:
-                filters.append("f.project=?")
-                params.append(project)
+                filters.append("f.project GLOB ?")
+                params.append(project_pattern(project))
             if not args.include_superseded:
                 filters.append("f.superseded=0")
             where = " AND ".join(filters) or "1=1"

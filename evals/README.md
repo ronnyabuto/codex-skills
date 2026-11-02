@@ -31,7 +31,7 @@ python3 -B evals/run_outcome_evals.py --case memory-recall --token-budget 250000
 python3 -B evals/run_outcome_evals.py --output /tmp/codex-skill-outcomes --token-budget 1000000
 ```
 
-Omit `--case` to select all four cases; repeat it to select several. The model
+Omit `--case` to select all five cases; repeat it to select several. The model
 comes from `--model` or the user's top-level `model` setting. The selected name
 is retained, not replaced with a newer alias. The runner ignores other user
 configuration; custom provider/profile configuration is not inherited. It uses
@@ -43,6 +43,7 @@ ordinary Codex authentication, which is not copied into fixtures or reports.
 | `audit-scope` | Keep source unchanged, identify the validation failure with a location and reproduction, and disclose unavailable delegation. |
 | `memory-recall` | Recover the current decision and constraint, cite the dated source, reject superseded advice, and retrieve bounded source lines. |
 | `query-evidence` | Retain and execute a replayable probe, preserve the implementation and customer names, and measure six SQL requests becoming one. |
+| `routine-control` | Correct simple arithmetic without invoking the unrelated current-docs skill. |
 
 Each run freezes the selected skill once under `candidates/`. Both arms get a
 copy of that snapshot under project `.agents/skills/`; a session-only
@@ -113,3 +114,37 @@ skills; a read-capable process can access data outside the fixture, and the
 runner does not isolate authentication or the whole operating system. No
 production account mutations, uploads or personal configuration changes are
 part of these synthetic evaluations.
+
+## Natural requests and output contracts
+
+`outcome_contracts.json` separates natural user requests from serialization-only
+deliverables and hidden check names. Only the request and deliverable reach the
+agent. No prompt tells it to fetch origin, disclose missing delegation, reject
+superseded notes, or use bounded reads. File names and the query probe JSON
+interface remain explicit so deterministic graders can replay the evidence; this
+is still a constrained artifact-delivery evaluation, not unconstrained chat.
+The request does not give expected counts or customer names.
+
+`routine-control` asks for a standard-library-free arithmetic correction with
+`current-docs` available. It checks correct results and absence of unrelated
+skill use. Both arms should pass; it detects unnecessary activation.
+
+Each summary retains enabled-minus-disabled per-pair token, elapsed-time,
+native turn deltas, alongside outcome scores. Unknown metrics
+stay unknown; error/skipped pairs are excluded. Native turn definitions and
+usage accounting differ by client, so compare deltas within a client/model,
+not absolute Claude and Codex turn counts. A single run is not a latency
+benchmark. Saved contracts and their hash identify the exact prompt definitions.
+
+When both source checkouts are available, run:
+
+```bash
+python3 evals/check_sibling_contracts.py /path/to/other-checkout
+```
+
+This optional check compares shared outcome definitions and four intentionally
+platform-neutral skills. Update both reviewed copies together; do not generate
+one client package from the other. Hook/transcript formats, memory namespaces,
+recorders, installers, worktree environments and runtime adapters intentionally
+remain separate. No sibling checkout is needed for installation or ordinary
+offline tests.

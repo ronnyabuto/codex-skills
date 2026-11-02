@@ -1,4 +1,4 @@
-# Codex compatibility — public release 2.0.0
+# Codex compatibility — public release 2.0.1
 
 This release is reviewed against Codex CLI 0.165.0, Python 3.14.4 and SQLite
 3.46.1. Markdown skills use the portable Agent Skills format; supporting
@@ -74,3 +74,23 @@ The public release excludes the inherited recorder and provides an independently
 written replacement under MIT. Its foreground command is `record`, annotations
 are sidecar files, and FFmpeg itself verifies media; it no longer requires
 ffprobe or ASS. See the recorder reference for migration and platform limits.
+
+## Evolution review — 2026-11-02
+
+Offline checks and CLI help were reviewed with Codex CLI 0.166.0 available.
+No live model evaluation was run. Shared natural-request/output contracts and
+four platform-neutral skills can be checked against the Claude source with
+`python3 evals/check_sibling_contracts.py /path/to/agent-skills`. This optional
+source check is not an installed-plugin dependency.
+
+Git common-directory identity now uses a stable label even with
+`--separate-git-dir`. Search, recent and hook counts also recognize older labels
+with the same identity hash, without changing existing note files. Ordinary
+repository IDs are unchanged. The absolute Git directory remains the identity:
+moving the repository can require explicit old-note retrieval using
+`--all-projects` or a known note path.
+
+Claude frontmatter, settings hooks and transcript parsing remain in the Claude
+collection. Do not copy its recorder into this package. Codex's implicit
+invocation policy remains unchanged; audit scope is enforced by task permissions,
+not by pretending that skill metadata supplies a sandbox.

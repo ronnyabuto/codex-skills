@@ -25,7 +25,7 @@ with open(os.environ["CALL_LOG"], "a") as stream:
 def command(text, output=""):
     print(json.dumps({"type":"item.completed","item":{"type":"command_execution","command":text,"exit_code":0,"aggregated_output":output}}))
 print(json.dumps({"type":"thread.started","thread_id":"fake-thread"}))
-if arm == "enabled" or mode == "contaminated":
+if (arm == "enabled" and case != "routine-control") or mode == "contaminated":
     command("cat " + str(pathlib.Path.cwd() / ".agents/skills" / skill / "SKILL.md"))
 pathlib.Path(".artifacts").mkdir(exist_ok=True)
 if case == "assigned-worktree":
@@ -52,6 +52,8 @@ elif case == "memory-recall":
     note=next(vault.rglob("cedar-current.md"))
     pathlib.Path(".artifacts/recall.md").write_text("73 seconds; 90-second lease, 17 seconds for retries. Source: " + str(note.relative_to(vault)) + " dated 2026-10-15.")
     command("python3 .agents/skills/vault-memory/scripts/memory.py read " + str(note.relative_to(vault)) + " --lines 1:30")
+elif case == "routine-control":
+    pathlib.Path("arithmetic.py").write_text("def double(value):\\n    return value * 2\\n")
 elif case == "query-evidence":
     script=pathlib.Path(".artifacts/probe.py")
     script.write_text("import json,sys\\nfrom pathlib import Path\\nsys.path.insert(0,str(Path(__file__).resolve().parents[1]))\\nimport app\\nout={}\\nfor name in ('before','after'):\\n    db=app.connect()\\n    queries=[]\\n    db.set_trace_callback(queries.append)\\n    names=getattr(app,name)(db)\\n    out[name]=dict(query_count=len(queries),queries=queries,names=names)\\n    db.close()\\nprint(json.dumps(out))\\n")
@@ -94,21 +96,35 @@ class OutcomeTests(unittest.TestCase):
         proc, records = self.run_evals()
         self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
         runs = [r for r in records if r["type"] == "case"]
-        self.assertEqual(len(runs), 8)
+        self.assertEqual(len(runs), 10)
         self.assertTrue(all(r["status"] == "pass" for r in runs))
-        self.assertEqual(records[-1]["comparable_pairs"], 4)
+        self.assertEqual(records[-1]["comparable_pairs"], 5)
+        overhead = records[-1]["paired_overhead"]
+        self.assertEqual(len(overhead), 5)
+        self.assertTrue(all(row["turn_delta"] == 0 for row in overhead))
+        self.assertTrue(all(row["token_delta"] == 0 for row in overhead))
+        saved = self.root / "run/outcome-contracts.json"
+        self.assertTrue(saved.is_file())
+        self.assertEqual(len(records[0]["contracts_sha256"]), 64)
+        contracts = json.loads(saved.read_text())
+        for record in (r for r in records if r["type"] == "case"):
+            request = json.loads((Path(record["artifacts"]) / "request.json").read_text())
+            definition = contracts[record["case"]]
+            expected = "\n\n".join(part for part in (definition["query"], definition["deliverable"]) if part)
+            self.assertEqual(request["query"], expected)
+            self.assertTrue(any(expected in arg for arg in request["command"]))
         self.assertEqual(records[-1]["pass_rate_delta"], 0)
-        self.assertEqual(records[-1]["total_tokens"], 960)
+        self.assertEqual(records[-1]["total_tokens"], 1200)
         self.assertIsNone(records[-1]["estimated_cost_usd"])
         for run in runs:
             self.assertEqual(run["candidate_sha256"], records[0]["candidate_sha256"][run["skill"]])
-            self.assertEqual(run["skill_read"], run["arm"] == "enabled")
+            self.assertEqual(run["skill_read"], run["arm"] == "enabled" and run["case"] != "routine-control")
             local = Path(run["artifacts"]) / ("assigned" if run["case"] == "assigned-worktree" else "project")
             self.assertEqual((local / ".agents/skills" / run["skill"] / "SKILL.md").exists(), run["arm"] == "enabled")
             self.assertEqual(run["reported_tokens"], 120)
             self.assertTrue((Path(run["artifacts"]) / "session.jsonl").is_file())
         calls = [json.loads(line) for line in (self.root / "calls.jsonl").read_text().splitlines()]
-        self.assertEqual(len({call["cwd"] for call in calls}), 8)
+        self.assertEqual(len({call["cwd"] for call in calls}), 10)
         for call in calls:
             self.assertFalse(Path(call["runtime_home"]).exists())
             self.assertFalse(Path(call["runtime_home"]).is_relative_to(self.root / "run"))
@@ -181,7 +197,7 @@ class OutcomeTests(unittest.TestCase):
     def test_list_invalid_limits_and_existing_output_do_not_start_model_calls(self):
         proc, records = self.run_evals("--list")
         self.assertEqual(proc.returncode, 0)
-        self.assertEqual(len(json.loads(proc.stdout)), 4)
+        self.assertEqual(len(json.loads(proc.stdout)), 5)
         for option in ("--timeout", "--token-budget"):
             for value in ("0", "-1"):
                 proc, _ = self.run_evals(option, value)
@@ -194,6 +210,14 @@ class OutcomeTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 2)
         self.assertEqual(marker.read_text(), "existing evidence")
         self.assertFalse((self.root / "calls.jsonl").exists())
+    def test_routine_control_detects_unnecessary_skill_use(self):
+        proc, records = self.run_evals("--case", "routine-control", outcomes={"routine-control:enabled": "contaminated"})
+        self.assertEqual(proc.returncode, 1)
+        enabled = next(r for r in records if r.get("arm") == "enabled")
+        self.assertEqual(enabled["status"], "fail")
+        self.assertTrue(next(c["passed"] for c in enabled["checks"] if c["name"] == "arithmetic outcomes corrected"))
+        self.assertFalse(next(c["passed"] for c in enabled["checks"] if c["name"] == "unrelated skill not used"))
+
 
 
 if __name__ == "__main__":

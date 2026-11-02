@@ -46,7 +46,8 @@ def handle(payload):
         return ""
     db = memory.open_index(root)
     try:
-        count = db.execute("SELECT COUNT(*) FROM files WHERE project=? AND superseded=0", (project,)).fetchone()[0]
+        count = db.execute("SELECT COUNT(*) FROM files WHERE project GLOB ? AND superseded=0",
+                           (memory.project_pattern(project),)).fetchone()[0]
     finally:
         db.close()
     if not count:

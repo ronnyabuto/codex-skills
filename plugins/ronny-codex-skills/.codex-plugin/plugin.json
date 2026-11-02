@@ -1,6 +1,6 @@
 {
   "name": "ronny-codex-skills",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Focused development, review, verification, and decision recall workflows adapted for Codex.",
   "skills": "./skills/",
   "license": "MIT",

@@ -17,7 +17,7 @@ import tomllib
 
 from codex_session import run_session
 from outcome_cases import CASES, grade, tool_calls
-from outcome_cases import prepare
+from outcome_cases import prepare, user_prompt
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "plugins/ronny-codex-skills/skills"
@@ -69,8 +69,8 @@ def run_arm(case_id, arm, args, destination):
     env = dict(os.environ, CODEX_MEMORY_VAULT=str(vault),
                CODEX_MEMORY_CACHE=str(destination / "cache"), CODEX_MEMORY_EXCLUDE="",
                PYTHONDONTWRITEBYTECODE="1")
-    command = session_command(args, CASES[case_id]["query"], cwd, skill_dir / "SKILL.md", arm, destination)
-    (destination / "request.json").write_text(json.dumps({"query": CASES[case_id]["query"], "command": command}, indent=2) + "\n")
+    command = session_command(args, user_prompt(case_id), cwd, skill_dir / "SKILL.md", arm, destination)
+    (destination / "request.json").write_text(json.dumps({"query": user_prompt(case_id), "command": command}, indent=2) + "\n")
     # Keep personal standing instructions and plugin state out of both arms.
     # Authentication is linked only in this private, disposable runtime home.
     auth = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "auth.json"
@@ -114,7 +114,15 @@ def summarize(records):
              for arm in counts}
     known = [r["reported_tokens"] for r in executed if r["reported_tokens"] is not None]
     missing = len(executed) - len(known)
-    return dict(type="summary", counts=counts, comparable_pairs=len(pairs), pass_rates=rates,
+    overhead = []
+    for pair in pairs:
+        enabled, disabled = pair["enabled"], pair["disabled"]
+        def difference(field):
+            values = [record.get(field) for record in (enabled, disabled)]
+            return values[0] - values[1] if all(type(v) in (int, float) for v in values) else None
+        overhead.append(dict(case=enabled["case"], elapsed_seconds_delta=difference("elapsed_seconds"),
+                             token_delta=difference("reported_tokens"), turn_delta=difference("num_turns")))
+    return dict(type="summary", counts=counts, paired_overhead=overhead, comparable_pairs=len(pairs), pass_rates=rates,
                 pass_rate_delta=rates["enabled"] - rates["disabled"] if pairs else None,
                 observed_tokens=sum(known) if known else None, usage_missing_runs=missing,
                 total_tokens=sum(known) if not missing else None, estimated_cost_usd=None,
@@ -159,12 +167,14 @@ def main():
     if output.is_relative_to(ROOT):
         parser.error("output must be outside the package directory")
     output.mkdir(mode=0o700)
+    contract_bytes = Path(__file__).with_name("outcome_contracts.json").read_bytes()
+    (output / "outcome-contracts.json").write_bytes(contract_bytes)
     args.candidates = output / "candidates"
     for skill in dict.fromkeys(CASES[c]["skill"] for c in selected):
         shutil.copytree(SKILLS / skill, args.candidates / skill,
                         ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     grader_hash = hashlib.sha256(Path(__file__).with_name("outcome_cases.py").read_bytes()).hexdigest()
-    metadata = dict(type="run", codex_version=version, model=args.model, cases=selected,
+    metadata = dict(contracts_sha256=hashlib.sha256(contract_bytes).hexdigest(), type="run", codex_version=version, model=args.model, cases=selected,
                     grader_sha256=grader_hash,
                     timeout_seconds=args.timeout, token_budget=args.token_budget,
                     candidate_sha256={CASES[c]["skill"]: snapshot_hash(args.candidates / CASES[c]["skill"]) for c in selected})
