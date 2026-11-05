@@ -914,7 +914,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "Show screenshots proving that the setting persists after reload.",
-    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
     "status": "not-run"
   },
   {
@@ -923,7 +923,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "Record the actual multi-step signup flow and its assertions.",
-    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
     "status": "not-run"
   },
   {
@@ -932,7 +932,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "Prove this API optimization reduced requests with a measured probe.",
-    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
     "status": "not-run"
   },
   {
@@ -941,7 +941,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "Capture before/after evidence for this rendering bug.",
-    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
     "status": "not-run"
   },
   {
@@ -950,7 +950,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "Demonstrate the fixed interaction with a reproducible browser trace.",
-    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
     "status": "not-run"
   },
   {
@@ -958,8 +958,17 @@
     "skill": "evidence-driven-testing",
     "category": "positive",
     "should_trigger": true,
+    "query": "Rehearse this database migration using the approved development-data workflow; do not deploy.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
+    "status": "not-run"
+  },
+  {
+    "id": "evidence-driven-testing-positive-7",
+    "skill": "evidence-driven-testing",
+    "category": "positive",
+    "should_trigger": true,
     "query": "Our checkout tests only check a toast. Design useful retry-after-timeout checks and explain which older tests to retain; do not edit or record anything.",
-    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
     "status": "not-run"
   },
   {
@@ -995,7 +1004,7 @@
     "category": "boundary",
     "should_trigger": true,
     "query": "Capture evidence locally for this PR; do not post comments or upload it.",
-    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
     "status": "not-run"
   },
   {
@@ -1004,7 +1013,7 @@
     "category": "boundary",
     "should_trigger": true,
     "query": "No GUI or ffmpeg is available. Use headless screenshots or probes and disclose the missing recording.",
-    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization.",
+    "expected_behavior": "Choose proportionate checks that protect observable behavior; use realistic state transitions and relevant failure/recovery paths, retain older regression coverage when applicable, and avoid unnecessary permanent tests or recordings. Capture real evidence when requested, avoid secrets, and publish only within authorization. For data workflows, reuse approved commands, preserve relevant data properties and isolation, bound outputs and authority, and keep deployment within its separately authorized scope.",
     "status": "not-run"
   },
   {

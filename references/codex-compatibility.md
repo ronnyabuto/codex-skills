@@ -1,4 +1,4 @@
-# Codex compatibility — public release 2.0.1
+# Codex compatibility — public release 2.1.0
 
 This release is reviewed against Codex CLI 0.165.0, Python 3.14.4 and SQLite
 3.46.1. Markdown skills use the portable Agent Skills format; supporting
@@ -94,3 +94,20 @@ Claude frontmatter, settings hooks and transcript parsing remain in the Claude
 collection. Do not copy its recorder into this package. Codex's implicit
 invocation policy remains unchanged; audit scope is enforced by task permissions,
 not by pretending that skill metadata supplies a sandbox.
+
+## Runtime review — 2026-11-05
+
+Local version/help is 0.166.0, matching the newest release in the official
+[changelog](https://learn.chatgpt.com/docs/changelog) when reviewed (2026-10-29).
+No live model evaluation was performed. Current
+[hooks documentation](https://learn.chatgpt.com/docs/hooks) confirms `hooks` is
+the feature key (`codex_hooks` is a deprecated alias), supports the existing
+lifecycle payload/output shapes, and includes `fork` as a SessionStart source.
+No configuration-key migration is needed.
+
+Default memory hooks now omit the SessionStart source filter. The existing
+bounded recall handler can therefore run on forks as well. The installer
+upgrades recognizable single-handler defaults, preserving custom filters and
+mixed groups. Synthetic merger/handler checks do not establish native event
+delivery. These source changes do not alter already-installed hooks, trust,
+notes or the chosen vault.

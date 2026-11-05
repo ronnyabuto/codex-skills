@@ -234,10 +234,13 @@ def merge_memory_hooks(target, script):
         entries = hooks.setdefault(event, [])
         matching = [handler for entry in entries for handler in entry.get("hooks", []) if handler.get("command") == command]
         if matching:
+            for entry in entries:
+                handlers = entry.get("hooks", [])
+                if (event == "SessionStart" and entry.get("matcher") == "startup|resume|clear|compact"
+                        and len(handlers) == 1 and handlers[0].get("command") == command):
+                    del entry["matcher"]
             continue
         entry = {"hooks": [{"type": "command", "command": command, "timeout": 3 if event == "SessionEnd" else 30}]}
-        if event == "SessionStart":
-            entry["matcher"] = "startup|resume|clear|compact"
         entries.append(entry)
     text = json.dumps(data, indent=2) + "\n"
     if not target.exists() or target.read_text() != text:

@@ -9,6 +9,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "evals/run_outcome_evals.py"
+CASE_COUNT = len(json.loads((ROOT / "evals/outcome_contracts.json").read_text()))
 FAKE = '''#!/usr/bin/env python3
 import json, os, pathlib, subprocess, sys, time
 if "--version" in sys.argv:
@@ -52,6 +53,12 @@ elif case == "memory-recall":
     note=next(vault.rglob("cedar-current.md"))
     pathlib.Path(".artifacts/recall.md").write_text("73 seconds; 90-second lease, 17 seconds for retries. Source: " + str(note.relative_to(vault)) + " dated 2026-10-15.")
     command("python3 .agents/skills/vault-memory/scripts/memory.py read " + str(note.relative_to(vault)) + " --lines 1:30")
+elif case == "data-rehearsal":
+    results = []
+    for profile in ("sanitized", "legacy-shape"):
+        result = subprocess.run([sys.executable, "workflow.py", "rehearse", "--profile", profile], capture_output=True, text=True)
+        results.append(json.loads(result.stdout))
+    pathlib.Path(".artifacts/rehearsal.json").write_text(json.dumps(dict(ready_for_release=False, deployment_performed=False, results=results)))
 elif case == "routine-control":
     pathlib.Path("arithmetic.py").write_text("def double(value):\\n    return value * 2\\n")
 elif case == "query-evidence":
@@ -96,11 +103,11 @@ class OutcomeTests(unittest.TestCase):
         proc, records = self.run_evals()
         self.assertEqual(proc.returncode, 0, proc.stderr + proc.stdout)
         runs = [r for r in records if r["type"] == "case"]
-        self.assertEqual(len(runs), 10)
+        self.assertEqual(len(runs), 2 * CASE_COUNT)
         self.assertTrue(all(r["status"] == "pass" for r in runs))
-        self.assertEqual(records[-1]["comparable_pairs"], 5)
+        self.assertEqual(records[-1]["comparable_pairs"], CASE_COUNT)
         overhead = records[-1]["paired_overhead"]
-        self.assertEqual(len(overhead), 5)
+        self.assertEqual(len(overhead), CASE_COUNT)
         self.assertTrue(all(row["turn_delta"] == 0 for row in overhead))
         self.assertTrue(all(row["token_delta"] == 0 for row in overhead))
         saved = self.root / "run/outcome-contracts.json"
@@ -114,7 +121,7 @@ class OutcomeTests(unittest.TestCase):
             self.assertEqual(request["query"], expected)
             self.assertTrue(any(expected in arg for arg in request["command"]))
         self.assertEqual(records[-1]["pass_rate_delta"], 0)
-        self.assertEqual(records[-1]["total_tokens"], 1200)
+        self.assertEqual(records[-1]["total_tokens"], 240 * CASE_COUNT)
         self.assertIsNone(records[-1]["estimated_cost_usd"])
         for run in runs:
             self.assertEqual(run["candidate_sha256"], records[0]["candidate_sha256"][run["skill"]])
@@ -124,7 +131,7 @@ class OutcomeTests(unittest.TestCase):
             self.assertEqual(run["reported_tokens"], 120)
             self.assertTrue((Path(run["artifacts"]) / "session.jsonl").is_file())
         calls = [json.loads(line) for line in (self.root / "calls.jsonl").read_text().splitlines()]
-        self.assertEqual(len({call["cwd"] for call in calls}), 10)
+        self.assertEqual(len({call["cwd"] for call in calls}), 2 * CASE_COUNT)
         for call in calls:
             self.assertFalse(Path(call["runtime_home"]).exists())
             self.assertFalse(Path(call["runtime_home"]).is_relative_to(self.root / "run"))
@@ -197,7 +204,7 @@ class OutcomeTests(unittest.TestCase):
     def test_list_invalid_limits_and_existing_output_do_not_start_model_calls(self):
         proc, records = self.run_evals("--list")
         self.assertEqual(proc.returncode, 0)
-        self.assertEqual(len(json.loads(proc.stdout)), 5)
+        self.assertEqual(len(json.loads(proc.stdout)), CASE_COUNT)
         for option in ("--timeout", "--token-budget"):
             for value in ("0", "-1"):
                 proc, _ = self.run_evals(option, value)

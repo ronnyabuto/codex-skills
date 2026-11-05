@@ -54,6 +54,14 @@ class HookTests(unittest.TestCase):
         self.assertIn(relative, context)
         self.assertLess(len(context), 1500)
 
+    def test_fork_start_recalls_current_project_and_respects_exclusion(self):
+        self.hook("PreCompact")
+        result = self.hook("SessionStart", source="fork")
+        context = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("1 notes for this repository", context)
+        self.env["CODEX_MEMORY_EXCLUDE"] = "project"
+        self.assertEqual(self.hook("SessionStart", source="fork").stdout, "")
+
     def test_later_event_updates_existing_snapshot(self):
         self.hook("PreCompact")
         self.source.write_text(self.source.read_text() + json.dumps({"type": "compacted", "payload": {"message": "Later compacted summary"}}) + "\n")

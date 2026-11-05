@@ -7,6 +7,9 @@ maintained independently from the Claude collection and licensed under [MIT](LIC
 
 current-docs, project-audit, ux-speed-audit, understand-before-changing, code-structure, no-ai-tells, no-ai-tells-audit, new-feature, evidence-driven-testing, vault-memory, managed-audit and system-reasoning.
 
+For production-derived test data, migration rehearsal and release checks, see
+[project-owned data workflows](plugins/ronny-codex-skills/skills/evidence-driven-testing/references/data-workflows.md).
+
 For recurring workers, see [Codex loop admission and budgets](plugins/ronny-codex-skills/skills/system-reasoning/references/agent-loops.md).
 For test design and maintenance, see [useful tests](plugins/ronny-codex-skills/skills/evidence-driven-testing/references/useful-tests.md).
 The shared Codex guidance favors proportionate verification, meaningful retained
@@ -103,7 +106,7 @@ python3 -B -m unittest discover -s tests -v
 
 Validation checks manifests, skill frontmatter, contained references, Python
 syntax and exclusion of the inherited recorder. Tests cover memory scoping, realpath containment, concurrent notes, redaction, index freshness, transcript import and superseded notes. evals/cases.json retains independent positive/negative behavior scenarios; the
-paired outcome runner now implements five synthetic enabled/disabled comparisons.
+paired outcome runner now implements six synthetic enabled/disabled comparisons.
 The catalog itself is not a completed model benchmark. Do not run paid agent evaluations without authorization. Each behavioral case needs a fresh disposable fixture and comparison with/without the skill.
 See [paired outcome instructions and rubrics](evals/README.md) and
 [Codex compatibility](references/codex-compatibility.md).

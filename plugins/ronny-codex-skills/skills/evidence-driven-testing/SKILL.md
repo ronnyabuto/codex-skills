@@ -1,11 +1,16 @@
 ---
 name: evidence-driven-testing
-description: Choose realistic verification and capture reproducible screenshots, recordings, or measured probes. Use when asked to prove behavior, demonstrate a fix, compare performance, design useful tests, or assess which tests to retain or replace.
+description: Choose realistic verification and capture reproducible screenshots, recordings, or measured probes. Use when asked to prove behavior, demonstrate a fix, compare performance, design useful tests, assess which tests to retain or replace, choose production-derived test data, rehearse migrations, or verify database releases.
 metadata:
   requirements: "Python 3 and FFmpeg with libx264 for the optional recorder; a browser automation environment for headless UI capture."
 ---
 
 # Evidence-Driven Testing
+
+For production-derived test data, migration rehearsal or production verification,
+read [Data workflows](references/data-workflows.md). Discover and reuse the
+project's approved route; ordinary fixtures need no production access. Its
+evidence destination and retention rules govern data-workflow artifacts.
 
 For test selection or maintenance, read [Useful tests](references/useful-tests.md). Verification need not add permanent tests or recordings; retain checks for meaningful uncovered behavior or regression risk. For test-design requests, return recommendations without starting a capture.
 

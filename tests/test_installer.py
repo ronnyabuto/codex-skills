@@ -154,6 +154,24 @@ class InstallerTests(unittest.TestCase):
             installer.merge_agent_guidance(target, source)
         self.assertEqual(target.read_text(), before)
 
+    def test_start_hook_upgrade_preserves_custom_filters_and_includes_forks(self):
+        import re
+        target = self.home / "hooks.json"
+        script = self.home / "hooks.py"
+        command = "python3 " + str(script)
+        handler = {"type": "command", "command": command, "timeout": 30}
+        legacy = {"matcher": "startup|resume|clear|compact", "hooks": [handler]}
+        custom = {"matcher": "resume", "hooks": [handler]}
+        mixed = {"matcher": "startup|resume|clear|compact", "hooks": [handler, {"type": "command", "command": "other-command"}]}
+        target.write_text(json.dumps({"hooks": {"SessionStart": [legacy, custom, mixed]}}))
+        installer.merge_memory_hooks(target, script)
+        groups = json.loads(target.read_text())["hooks"]["SessionStart"]
+        self.assertTrue(re.search(groups[0].get("matcher", ".*"), "fork"))
+        self.assertEqual(groups[1:], [custom, mixed])
+        before = target.read_text()
+        installer.merge_memory_hooks(target, script)
+        self.assertEqual(target.read_text(), before)
+
     def test_hooks_preserve_unrelated_handlers_and_are_idempotent(self):
         target = self.home / "hooks.json"
         target.write_text(json.dumps({"description": "Existing hooks", "hooks": {"SessionStart": [{"hooks": [{"type": "command", "command": "existing-command"}]}]}}))
@@ -163,6 +181,7 @@ class InstallerTests(unittest.TestCase):
         data = json.loads(target.read_text())
         self.assertEqual(data["description"], "Existing hooks")
         self.assertEqual(len(data["hooks"]["SessionStart"]), 2)
+        self.assertNotIn("matcher", data["hooks"]["SessionStart"][1])
         self.assertEqual(data["hooks"]["SessionStart"][0]["hooks"][0]["command"], "existing-command")
         self.assertEqual(data["hooks"]["SessionEnd"][0]["hooks"][0]["timeout"], 3)
         self.assertIn("'", data["hooks"]["PreCompact"][0]["hooks"][0]["command"])
