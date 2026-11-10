@@ -31,6 +31,24 @@ python3 -B evals/run_outcome_evals.py --case memory-recall --token-budget 250000
 python3 -B evals/run_outcome_evals.py --output /tmp/codex-skill-outcomes --token-budget 1000000
 ```
 
+For an explicit Sol 6.1 medium comparison:
+
+```bash
+python3 -B evals/run_outcome_evals.py --model gpt-6.1-sol --effort medium --case routine-control
+```
+
+The paired and system-reasoning runners accept optional
+`--effort low|medium|high|xhigh|max`, passed as a per-session
+`model_reasoning_effort` configuration override. The smoke runner also accepts
+`--model`; omitting it preserves normal client selection. Paired runs retain their
+existing model selection and isolation. In particular, they do not inherit the
+user's effort setting just because they read the selected model name.
+Both runners record `requested_effort` (null when omitted); the smoke runner also
+records `requested_model`. Paired requests retain the exact command. These fields
+describe requested settings, not independently observed server behavior. Choose a
+level supported by the selected model and client. Omitting `--effort` adds no
+override and preserves existing defaults. Live commands consume model usage.
+
 Omit `--case` to select all six cases; repeat it to select several. The model
 comes from `--model` or the user's top-level `model` setting. The selected name
 is retained, not replaced with a newer alias. The runner ignores other user

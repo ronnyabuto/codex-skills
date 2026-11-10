@@ -111,6 +111,10 @@ The catalog itself is not a completed model benchmark. Do not run paid agent eva
 See [paired outcome instructions and rubrics](evals/README.md) and
 [Codex compatibility](references/codex-compatibility.md).
 
+See [efficient use with Sol 6.1 medium](references/efficient-use.md) for task
+selection, bounded recall and measuring context overhead. This on-demand guide
+is not added to global instructions or skill discovery.
+
 `python3 evals/run_system_reasoning.py <new-output-directory>` runs five
 read-only Codex cases with fresh synthetic fixtures and saves JSONL events,
 answers, token usage, and fixture-integrity checks. It uses the installed plugin

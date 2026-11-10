@@ -1,4 +1,22 @@
-# Public release validation — 2.0.0
+# Release validation — 2.1.1
+
+- The paired and system-reasoning runners accept optional explicit effort.
+  Paired runs apply the same per-session override in both isolated arms; smoke
+  runs can also select an exact model. Reports distinguish requested effort
+  from observed model behavior. Omitting the options preserves existing defaults.
+- All 70 offline tests complete: 68 pass and two optional real-media tests skip
+  because FFmpeg is not configured locally. New checks cover model/effort
+  forwarding, both-arm parity, omitted-option compatibility and rejecting invalid
+  effort before model calls. Existing memory, hook and installer tests pass.
+- Package validation, the release inventory, and the sibling contract check
+  pass. The twelve skill entrypoints, helpers, hooks and standing guidance are
+  unchanged. The new Sol 6.1 medium guide is available on demand.
+- No live model comparison or new token-savings claim is made. No paid
+  evaluations, GUI recording, global instruction changes or hook changes were
+  performed as offline verification. Installation uses the existing verified
+  release and supported plugin workflow.
+
+## Public release validation — 2.0.0
 
 - All 57 offline tests pass on Python 3.14.4 / SQLite 3.46.1. This includes the
   existing 48 memory, hooks, installer and eval cases, two release-inventory

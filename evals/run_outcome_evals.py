@@ -15,7 +15,7 @@ import subprocess
 import tempfile
 import tomllib
 
-from codex_session import run_session
+from codex_session import EFFORT_LEVELS, run_session
 from outcome_cases import CASES, grade, tool_calls
 from outcome_cases import prepare, user_prompt
 
@@ -44,6 +44,8 @@ def session_command(args, query, cwd, skill_file, arm, destination):
         "features.multi_agent=false", "features.memories=false", "features.browser_use=false",
         f"skills.config=[{{path={json.dumps(str(skill_file))},enabled={enabled}}}]",
     ]
+    if args.effort is not None:
+        overrides.append(f"model_reasoning_effort={json.dumps(args.effort)}")
     command = ["codex", "--no-daemon", "exec", "--json", "--ephemeral", "--strict-config",
                "--ignore-user-config", "--ignore-rules", "--sandbox", "workspace-write",
                "--skip-git-repo-check", "-C", str(cwd), "--add-dir", str(destination),
@@ -134,6 +136,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", action="append", choices=CASES, dest="cases")
     parser.add_argument("--model", help="Defaults to the model selected in user config; provider configuration is not inherited")
+    parser.add_argument("--effort", choices=EFFORT_LEVELS,
+                        help="Pin requested effort for both arms; user effort settings are not inherited")
     parser.add_argument("--timeout", type=int, default=180)
     parser.add_argument("--token-budget", type=int, default=60000,
                         help="Admission threshold for reported input + output tokens; an active run may exceed it")
@@ -175,7 +179,7 @@ def main():
                         ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     grader_hash = hashlib.sha256(Path(__file__).with_name("outcome_cases.py").read_bytes()).hexdigest()
     metadata = dict(contracts_sha256=hashlib.sha256(contract_bytes).hexdigest(), type="run", codex_version=version, model=args.model, cases=selected,
-                    grader_sha256=grader_hash,
+                    requested_effort=args.effort, grader_sha256=grader_hash,
                     timeout_seconds=args.timeout, token_budget=args.token_budget,
                     candidate_sha256={CASES[c]["skill"]: snapshot_hash(args.candidates / CASES[c]["skill"]) for c in selected})
     (output / "run.json").write_text(json.dumps(metadata, indent=2) + "\n")

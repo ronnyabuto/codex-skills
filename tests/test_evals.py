@@ -19,10 +19,12 @@ class EvalTests(unittest.TestCase):
     def run_case(self, output, result=None, timeout=False, options=()):
         execute = subprocess.run
         environments = []
+        self.commands = []
         def fake_run(command, **kwargs):
             if command[0] == "git":
                 return execute(command, **kwargs)
             environments.append(kwargs["env"])
+            self.commands.append(command)
             if timeout:
                 raise subprocess.TimeoutExpired(command, 240, output=b'{"type":')
             return subprocess.CompletedProcess(command, 0, result or "", "")
@@ -36,6 +38,10 @@ class EvalTests(unittest.TestCase):
             event = json.dumps({"type": "item.completed", "item": {"type": "agent_message", "text": "Remove the extra day."}})
             report, environments = self.run_case(output, event + '\n' + json.dumps({"type": "turn.completed", "usage": {"input_tokens": 100, "cached_input_tokens": 90, "output_tokens": 10, "reasoning_output_tokens": 5}}))
             self.assertFalse(report["error"])
+            self.assertIsNone(report["requested_model"])
+            self.assertIsNone(report["requested_effort"])
+            self.assertNotIn("--model", self.commands[0])
+            self.assertFalse(any(arg.startswith("model_reasoning_effort=") for arg in self.commands[0]))
             self.assertTrue(report["fixture_unchanged"])
             summary = json.loads((output / "run-summary.json").read_text())
             self.assertEqual(report["reported_tokens"], 110)
@@ -48,6 +54,36 @@ class EvalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             report, _ = self.run_case(Path(directory) / "results", timeout=True)
             self.assertTrue(report["error"])
+
+    def test_explicit_model_and_effort_are_applied_and_recorded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "results"
+            events = [
+                {"type": "item.completed", "item": {"type": "agent_message", "text": "Remove the extra day."}},
+                {"type": "turn.completed", "usage": {"input_tokens": 100, "output_tokens": 10}},
+            ]
+            report, _ = self.run_case(output, "\n".join(map(json.dumps, events)),
+                                      options=("--model", "gpt-6.1-sol", "--effort", "medium"))
+            self.assertFalse(report["error"])
+            command = self.commands[0]
+            self.assertEqual(command[command.index("--model") + 1], "gpt-6.1-sol")
+            index = command.index('model_reasoning_effort="medium"')
+            self.assertEqual(command[index - 1], "-c")
+            for record in (report, json.loads((output / "run-summary.json").read_text())):
+                self.assertEqual(record["requested_model"], "gpt-6.1-sol")
+                self.assertEqual(record["requested_effort"], "medium")
+
+    def test_invalid_effort_never_starts_a_model(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "results"
+            with patch.object(sys, "argv", [str(SCRIPT), str(output), "--effort", "typo"]), \
+                    patch.object(subprocess, "run") as execute, \
+                    patch("sys.stderr"):
+                with self.assertRaises(SystemExit) as error:
+                    runner.main()
+            self.assertEqual(error.exception.code, 2)
+            execute.assert_not_called()
+            self.assertFalse(output.exists())
 
     def test_empty_or_malformed_events_are_errors(self):
         with tempfile.TemporaryDirectory() as directory:
