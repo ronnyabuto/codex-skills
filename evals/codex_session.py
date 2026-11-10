@@ -7,6 +7,9 @@ import subprocess
 import time
 
 
+EFFORT_LEVELS = ("low", "medium", "high", "xhigh", "max")
+
+
 def analyze(output, returncode, timed_out=False):
     events, malformed = [], False
     for line in output.splitlines():

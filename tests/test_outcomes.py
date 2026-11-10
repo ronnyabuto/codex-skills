@@ -106,6 +106,7 @@ class OutcomeTests(unittest.TestCase):
         self.assertEqual(len(runs), 2 * CASE_COUNT)
         self.assertTrue(all(r["status"] == "pass" for r in runs))
         self.assertEqual(records[-1]["comparable_pairs"], CASE_COUNT)
+        self.assertIsNone(records[0]["requested_effort"])
         overhead = records[-1]["paired_overhead"]
         self.assertEqual(len(overhead), CASE_COUNT)
         self.assertTrue(all(row["turn_delta"] == 0 for row in overhead))
@@ -133,6 +134,7 @@ class OutcomeTests(unittest.TestCase):
         calls = [json.loads(line) for line in (self.root / "calls.jsonl").read_text().splitlines()]
         self.assertEqual(len({call["cwd"] for call in calls}), 2 * CASE_COUNT)
         for call in calls:
+            self.assertFalse(any(arg.startswith("model_reasoning_effort=") for arg in call["args"]))
             self.assertFalse(Path(call["runtime_home"]).exists())
             self.assertFalse(Path(call["runtime_home"]).is_relative_to(self.root / "run"))
             self.assertIn("--ignore-user-config", call["args"])
@@ -142,6 +144,28 @@ class OutcomeTests(unittest.TestCase):
             self.assertIn("project_doc_max_bytes=0", call["args"])
             self.assertIn("workspace-write", call["args"])
             self.assertNotIn("--dangerously-bypass-approvals-and-sandbox", call["args"])
+
+    def test_explicit_model_and_effort_reach_both_isolated_arms(self):
+        proc, records = self.run_evals("--case", "routine-control", "--model", "gpt-6.1-sol",
+                                       "--effort", "medium")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(records[0]["model"], "gpt-6.1-sol")
+        self.assertEqual(records[0]["requested_effort"], "medium")
+        calls = [json.loads(line) for line in (self.root / "calls.jsonl").read_text().splitlines()]
+        self.assertEqual(len(calls), 2)
+        for call in calls:
+            args = call["args"]
+            self.assertEqual(args[args.index("--model") + 1], "gpt-6.1-sol")
+            self.assertIn('model_reasoning_effort="medium"', args)
+            index = args.index('model_reasoning_effort="medium"')
+            self.assertEqual(args[index - 1], "-c")
+            self.assertIn("--ignore-user-config", args)
+
+    def test_invalid_effort_never_starts_a_model(self):
+        proc, records = self.run_evals("--effort", "typo")
+        self.assertEqual(proc.returncode, 2)
+        self.assertEqual(records, [])
+        self.assertFalse((self.root / "calls.jsonl").exists())
 
     def test_unauthorized_edits_fail_without_turning_baseline_success_into_failure(self):
         proc, records = self.run_evals("--case", "audit-scope", outcomes={"audit-scope:enabled":"fail"})

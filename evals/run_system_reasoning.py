@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 import subprocess
 
-from codex_session import analyze
+from codex_session import EFFORT_LEVELS, analyze
 
 CASES = [
     ("caching", True, "Our dashboard is slow. Assess whether Redis addresses the bottleneck before changing anything.",
@@ -35,6 +35,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
     parser.add_argument("--case", choices=[case[0] for case in CASES])
+    parser.add_argument("--model", help="Pin the requested model; otherwise use the normal client selection")
+    parser.add_argument("--effort", choices=EFFORT_LEVELS,
+                        help="Pin requested effort; otherwise use the normal client selection")
     parser.add_argument("--timeout", type=int, default=240, help="Seconds per case")
     parser.add_argument("--token-budget", type=int, help="Stop launching cases after this many reported input + output tokens; may overshoot by one case")
     args = parser.parse_args()
@@ -58,6 +61,10 @@ def main():
         subprocess.run(["git", "init", "-q", "-b", "main", str(fixture)], check=True)
         before = hashes(fixture)
         command = ["codex", "--no-daemon", "exec", "--json", "--ephemeral", "--sandbox", "read-only", "-C", str(fixture)]
+        if args.model is not None:
+            command += ["--model", args.model]
+        if args.effort is not None:
+            command += ["-c", f"model_reasoning_effort={json.dumps(args.effort)}"]
         command += [query + "\nRead-only assessment: inspect the supplied fixture, run harmless probes if useful, and do not modify files or delegate."]
         env = dict(os.environ, CODEX_MEMORY_VAULT=str(args.output.resolve() / (name + "-memory")),
                    CODEX_MEMORY_CACHE=str(args.output.resolve() / (name + "-cache")), CODEX_MEMORY_EXCLUDE="")
@@ -88,6 +95,7 @@ def main():
             observed_tokens += tokens
         report = {
             "case": name, "error": error or not unchanged,
+            "requested_model": args.model, "requested_effort": args.effort,
             "expected_trigger": expected, "skill_read": invoked,
             "fixture_unchanged": unchanged, "behavior_review": "pending",
             "usage": usage, "reported_tokens": tokens,
@@ -107,6 +115,7 @@ def main():
     executed = [report for report in reports if not report.get("skipped")]
     completed_count = sum(not report["error"] for report in executed)
     summary = {
+        "requested_model": args.model, "requested_effort": args.effort,
         "executed": len(executed), "completed": completed_count,
         "errors": len(executed) - completed_count,
         "skipped": len(reports) - len(executed),
