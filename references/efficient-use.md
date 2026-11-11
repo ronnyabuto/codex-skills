@@ -17,6 +17,21 @@ question. Do not turn routine edits into a checklist of skill reads.
 | Requested audit | The audit matching the scope; `managed-audit` only for requested coordination |
 | Requested readability cleanup | `no-ai-tells` for a diff; `no-ai-tells-audit` for repository-wide remediation |
 
+## Operating preference
+
+The compact preference is part of [standing guidance](agent-guidance.md), installed
+only with the existing `--agent-guidance` opt-in. Keep one copy there rather than
+adding it to each skill; preserve unrelated personal and project instructions.
+
+Bound reads by relevance, not an arbitrary line count: the complete function or
+contract may be necessary. Reuse context only while it is available and complete.
+Keep full diagnostic logs when displaying excerpts, and preserve the command's
+exit status; piping a failed check into `tail` can report success without
+`pipefail`. Batch independent operations, not dependent edits or checks. Generated
+files may need regeneration rather than a hand-edited fragment. Brief progress
+updates remain useful for substantial work; final answers should lead with the
+result. Documentation required to explain changed behavior is part of the task.
+
 ## Model and effort
 
 For Sol 6.1 medium, use explicit session overrides without changing global defaults:
@@ -62,6 +77,12 @@ Use fresh sessions from the same source snapshot, with the same exact model,
 effort, tools and acceptance criteria. The [paired runner](../evals/README.md)
 accepts explicit effort; live runs consume model usage. Offline harness checks
 establish harness behavior, not model quality or savings.
+
+The paired runner disables user/project standing instructions. It compares a
+selected skill, not the global operating preference. Evaluating that preference
+requires a separate controlled comparison with the same source, tools, model and
+effort, changing only the injected policy. Do not interpret the existing runner's
+passing grades as evidence that a global policy preserves quality or saves tokens.
 
 Compare correct outcomes and preserved scope first, then tool calls, input/cache
 categories, output, elapsed time and any available actual cost. Codex input
