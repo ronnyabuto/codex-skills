@@ -113,6 +113,11 @@ both arms. Synthetic environment variables isolate vaults/caches; no real notes
 are imported. Shell commands use workspace-write sandboxing, with the synthetic
 arm directory writable for local Git metadata, and no approval bypass.
 
+Both arms suppress personal/project standing instructions. This runner tests the
+selected skill, not a global communication or tool-use policy. A policy comparison
+must deliberately control its injection in otherwise equivalent sessions; changing
+your personal AGENTS.md does not make it part of these paired cases.
+
 These deterministic rubrics cover the stated observable contract; they do not
 prove every reasoning step or prevent deliberate rubric gaming. Review the
 retained transcripts for consequential claims. In particular, the audit case

@@ -1,4 +1,18 @@
-# Release validation — 2.1.1
+# Release validation — 2.1.2
+
+- Add a compact operating preference to the existing opt-in global guidance.
+  The on-demand guide preserves full-contract reads, diagnostic exit status,
+  useful progress updates, proportional verification and scoped clarification.
+- Document that paired skill evaluations suppress standing instructions and do
+  not establish quality or savings for a global policy. No runner behavior or
+  measured efficiency claim changes in this release.
+- All 11 installer regression tests pass. Package validation, the 68-file release
+  inventory, sibling contracts and changed-document local links pass. A focused
+  read-only review found no blocking drift from the agreed scope.
+- The twelve skills, runtime helpers, hooks, vault behavior and model defaults
+  are unchanged. No paid model evaluation was run.
+
+## Release validation — 2.1.1
 
 - The paired and system-reasoning runners accept optional explicit effort.
   Paired runs apply the same per-session override in both isolated arms; smoke
