@@ -1,0 +1,207 @@
+{
+  "date": "2026-11-19",
+  "codex_version": "0.170.0",
+  "requested_model": "gpt-6.2-sol",
+  "requested_effort": "medium",
+  "source_base": "b61bbac487c30049bc5071e3fcf999d5832ca127",
+  "grader_sha256": "ade685a40641f00b007de255357aaccbcd72f1ec0de92f2adacee121b5a9ed30",
+  "initial_comparison": [
+    {
+      "case": "assigned-worktree",
+      "enabled": {
+        "status": "fail",
+        "failed_checks": [
+          "fresh base retained"
+        ],
+        "reported_tokens": 69309,
+        "candidate_sha256": "e87d72284c5ceb8261d9698a7ac3d8a2b98fe481cb1fdd3760b69322810b2f2b",
+        "regraded_checks": []
+      },
+      "disabled": {
+        "status": "fail",
+        "failed_checks": [
+          "fresh base retained"
+        ],
+        "reported_tokens": 79964,
+        "candidate_sha256": "e87d72284c5ceb8261d9698a7ac3d8a2b98fe481cb1fdd3760b69322810b2f2b",
+        "regraded_checks": []
+      }
+    },
+    {
+      "case": "audit-scope",
+      "enabled": {
+        "status": "fail",
+        "failed_checks": [
+          "delegation limitation disclosed"
+        ],
+        "reported_tokens": 100925,
+        "candidate_sha256": "8a5b4ecbc5c2228918de61b19565fa66ffad7e21c7778ecde892d6ad1aa219eb",
+        "regraded_checks": []
+      },
+      "disabled": {
+        "status": "fail",
+        "failed_checks": [
+          "reproduction included",
+          "delegation limitation disclosed"
+        ],
+        "reported_tokens": 68576,
+        "candidate_sha256": "8a5b4ecbc5c2228918de61b19565fa66ffad7e21c7778ecde892d6ad1aa219eb",
+        "regraded_checks": []
+      }
+    },
+    {
+      "case": "memory-recall",
+      "enabled": {
+        "status": "fail",
+        "failed_checks": [
+          "bounded source retrieval observed"
+        ],
+        "reported_tokens": 99143,
+        "candidate_sha256": "9f6adb460c7d919a9504b58cc278d7ddbaf493f46b94276cdd5ed23809c76a00",
+        "regraded_checks": [
+          "source and date cited"
+        ]
+      },
+      "disabled": {
+        "status": "fail",
+        "failed_checks": [
+          "source and date cited",
+          "bounded source retrieval observed"
+        ],
+        "reported_tokens": 86729,
+        "candidate_sha256": "9f6adb460c7d919a9504b58cc278d7ddbaf493f46b94276cdd5ed23809c76a00",
+        "regraded_checks": []
+      }
+    },
+    {
+      "case": "query-evidence",
+      "enabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 72221,
+        "candidate_sha256": "d500ebedf14368000f8b752e3dff8f24d69ad1a22a290670d8f46e007968a0eb",
+        "regraded_checks": []
+      },
+      "disabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 70066,
+        "candidate_sha256": "d500ebedf14368000f8b752e3dff8f24d69ad1a22a290670d8f46e007968a0eb",
+        "regraded_checks": []
+      }
+    },
+    {
+      "case": "routine-control",
+      "enabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 78914,
+        "candidate_sha256": "50ab14558f581cd7eca0e489321827ac92a6491becfdff192b9087cb46de894a",
+        "regraded_checks": []
+      },
+      "disabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 66185,
+        "candidate_sha256": "50ab14558f581cd7eca0e489321827ac92a6491becfdff192b9087cb46de894a",
+        "regraded_checks": []
+      }
+    },
+    {
+      "case": "data-rehearsal",
+      "enabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 77142,
+        "candidate_sha256": "d500ebedf14368000f8b752e3dff8f24d69ad1a22a290670d8f46e007968a0eb",
+        "regraded_checks": []
+      },
+      "disabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 55837,
+        "candidate_sha256": "d500ebedf14368000f8b752e3dff8f24d69ad1a22a290670d8f46e007968a0eb",
+        "regraded_checks": []
+      }
+    },
+    {
+      "case": "design-sizing",
+      "enabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 125546,
+        "candidate_sha256": "cb38235e8300473bb78c6124e3887d76442eedeae20e065e153fc520843c93b8",
+        "regraded_checks": []
+      },
+      "disabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 105705,
+        "candidate_sha256": "cb38235e8300473bb78c6124e3887d76442eedeae20e065e153fc520843c93b8",
+        "regraded_checks": []
+      }
+    },
+    {
+      "case": "design-control",
+      "enabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 65939,
+        "candidate_sha256": "cb38235e8300473bb78c6124e3887d76442eedeae20e065e153fc520843c93b8",
+        "regraded_checks": []
+      },
+      "disabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 77468,
+        "candidate_sha256": "cb38235e8300473bb78c6124e3887d76442eedeae20e065e153fc520843c93b8",
+        "regraded_checks": []
+      }
+    }
+  ],
+  "assigned_workspace_followup": [
+    {
+      "case": "assigned-worktree",
+      "enabled": {
+        "status": "pass",
+        "failed_checks": [],
+        "reported_tokens": 116562,
+        "candidate_sha256": "35402c40e7d5724251bb82048f6cee057b3c8fff394dc35a10077759febd34e2",
+        "regraded_checks": [
+          "fresh base retained"
+        ]
+      },
+      "disabled": {
+        "status": "fail",
+        "failed_checks": [
+          "fresh base retained"
+        ],
+        "reported_tokens": 79618,
+        "candidate_sha256": "35402c40e7d5724251bb82048f6cee057b3c8fff394dc35a10077759febd34e2",
+        "regraded_checks": []
+      }
+    }
+  ],
+  "valid_model_sessions": 18,
+  "reported_tokens": 1495849,
+  "excluded_outer_sandbox_run": {
+    "completed_sessions": 3,
+    "reported_tokens": 238749,
+    "interrupted_attempts": 1,
+    "reason": "Tool execution/file writes failed in the outer sandbox; excluded from quality comparisons."
+  },
+  "design_review": {
+    "reviewer": "primary Codex agent",
+    "both_answers_meet_review_criteria": true,
+    "enabled_tokens": 125546,
+    "disabled_tokens": 105705,
+    "decision": "Removed added design reference: no incremental benefit demonstrated in this pair. Existing system-reasoning and arithmetic evaluations retained."
+  },
+  "limits": [
+    "One pair per case plus one targeted follow-up, not a statistical benchmark.",
+    "Cached input is included in reported input tokens; dollar cost is unknown.",
+    "Audit limitation disclosure and bounded retrieval still fail in both arms.",
+    "Raw grades are preserved; regrades correct date-format and variable-remote false flags.",
+    "The removed design-reference candidate differs from the retained original system-reasoning instructions."
+  ]
+}

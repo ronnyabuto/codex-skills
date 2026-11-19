@@ -1,27 +1,44 @@
 ---
 name: new-feature
-description: Create new task branches from freshly fetched origin/main; set up an isolated worktree when requested or needed for concurrent development.
+description: Start a fresh implementation task from fetched origin/main, or verify an assigned workspace. Use a worktree for requested isolation or concurrent writers. Skip reviews, questions and continuation of an existing task.
 ---
 
-# New Task Branch and Workspace
+# Start a task from a fresh base
 
-Fetch origin before creating a task branch; default to updated origin/main. Use a worktree for requested isolation or concurrent-write conflicts, not every feature or tiny fix.
+Before the first edit of a new task:
 
-- Inspect repository instructions, current branch, working-tree status and existing worktrees. Keep a harness-assigned worktree; do not assume a particular client creates one automatically.
-- For a fresh task, run `git fetch origin` successfully before creating the branch. Verify that origin/main was fetched and record its current commit. If the remote's fetch configuration excludes main, explicitly fetch it into refs/remotes/origin/main before proceeding.
-- Create the branch from that refreshed origin/main, not a possibly stale local main. Verify the new branch starts at the recorded base before editing; a newly created branch should match it exactly. Fetching does not require checking out, pulling into, or resetting local main.
-- Preserve an explicitly requested release branch, PR continuation or other task-specific base. Fetch its relevant remote base where applicable. Do not restart existing work from main or abandon task-relevant uncommitted changes.
-- If fetching fails or origin/main is absent, report the limitation and obtain direction before substituting a stale or different base. Do not claim the new branch is up to date without a successful fetch. Keep a harness-assigned branch, but verify its base freshness for a new task and resolve an outdated base without discarding work.
-- Open PRs touching the same file are coordination context, not automatically a blocker. Ask only when incompatible scope or ownership cannot be resolved from the instructions.
-- Create a unique branch and worktree in a suitable external or gitignored directory. Never force reuse or overwrite another session's checkout.
-- Verify branch and checkout before editing. Follow the repository's runtime/dependency setup, installing only when required. Restore required gitignored configuration before tests; see [worktree environments](references/environment.md).
+1. Inspect instructions, status, branch and existing worktrees. Preserve all
+   existing work and the assigned workspace. Continuing the same task does not
+   require restarting from main or fetching again.
+2. Successfully fetch origin and record the refreshed `origin/main` commit,
+   including on a harness-assigned branch or worktree. Assignment does not
+   prove remote freshness. If the refspec excludes main, explicitly fetch
+   `main:refs/remotes/origin/main`. Preserve an explicit release, PR or local
+   base instead of substituting main.
+3. For an assigned workspace, keep it and verify HEAD matches or descends from
+   that base. Resolve a stale base without discarding work; report a gap that
+   cannot be resolved within the task. If its metadata is read-only, fetch the
+   same remote into a disposable scratch Git directory and compare the fetched
+   commit with HEAD. A cached tracking ref alone is not fresh verification.
+4. Otherwise run `git switch --no-track -c <unique-branch> origin/main` and
+   verify HEAD equals the recorded base. Do not pull into or reset local main.
+   Without `--no-track`, the branch can inherit main as its upstream.
 
-Worktrees isolate working files, including separate copies of dependency lockfiles. They share Git metadata, refs and object storage; ports, external databases and caches may also be shared. Verify which process serves the app under test. Resolve lockfile conflicts with the appropriate package manager while preserving intended version choices.
+If a fresh fetch is unavailable, report the limitation and obtain direction
+before using a stale or different base. An overlapping PR is coordination
+context; ask only when incompatible ownership or scope remains unresolved.
 
-Prefer short-lived task branches; delete them after merge when no longer needed. Retain long-lived branches only for maintained releases or ongoing work.
+Use a worktree for requested isolation or concurrent writers. Choose a new
+external or gitignored path; never force reuse of another session's workspace.
+Restore required ignored configuration before checks, following
+[worktree environments](references/environment.md). Worktrees share Git objects,
+refs, ports, caches and external services. Verify the process being tested.
 
-Keep needed worktrees. Before cleanup, verify merge into the intended base, no later unmerged commits, and clean status. Within authorized cleanup scope, leave and remove the worktree, then prefer `git branch -d`. Use `-D` after squash/rebase only when integration is verified and no additional work remains. Report where the work lives.
+## Cleanup
 
-Deleting branches preserves commits reachable from main. Squash/rebase retain integrated work, potentially with different commit IDs.
-
-Recommend GitHub's [Automatically delete head branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-the-automatic-deletion-of-branches) setting under Settings → General → Pull Requests. It cleans remote PR branches; local branches/worktrees need cleanup. Repository rules may prevent deletion. Change settings only when authorized.
+Unless broader cleanup is requested, remove only branches and worktrees created
+for this task. Verify integration into the intended base, no later unmerged
+commits and clean status. Leave and remove the worktree, then prefer
+`git branch -d`. Use `-D` after squash/rebase only when integration is verified.
+Delete a remote branch only after its PR has merged. Report unfinished work's
+location and preserve other sessions' branches.

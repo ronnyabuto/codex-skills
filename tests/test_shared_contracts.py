@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from evals.check_sibling_contracts import SHARED_REFERENCES, SHARED_SKILLS, compare
+from evals.check_sibling_contracts import compare
 
 
 class SharedContractTests(unittest.TestCase):
@@ -15,19 +15,22 @@ class SharedContractTests(unittest.TestCase):
                 (repo / "evals").mkdir(parents=True)
                 (repo / "evals/outcome_contracts.json").write_text(json.dumps({"case": {"query": "natural task"}}))
                 skills = repo if repo == first else repo / "plugins/ronny-codex-skills/skills"
-                for name in SHARED_SKILLS:
+                for name in ("current-docs",):
                     (skills / name).mkdir(parents=True)
                     (skills / name / "SKILL.md").write_text("shared guidance")
-                for reference in SHARED_REFERENCES:
+                for reference in ("evidence-driven-testing/references/data-workflows.md",):
                     target = skills / reference
                     target.parent.mkdir(parents=True, exist_ok=True)
                     target.write_text("shared data guidance")
+            codex_only = second / "plugins/ronny-codex-skills/skills/code-structure"
+            codex_only.mkdir()
+            (codex_only / "SKILL.md").write_text("Codex-only guidance; absent in the sibling")
             self.assertEqual(compare(first, second), [])
             (second / "evals/outcome_contracts.json").write_text(json.dumps({"case": {"query": "changed task"}}))
             self.assertEqual(len(compare(first, second)), 1)
             (first / "current-docs/SKILL.md").write_text("changed policy")
             self.assertEqual(len(compare(first, second)), 2)
-            (first / SHARED_REFERENCES[0]).write_text("changed data policy")
+            (first / "evidence-driven-testing/references/data-workflows.md").write_text("changed data policy")
             self.assertEqual(len(compare(first, second)), 3)
 
 

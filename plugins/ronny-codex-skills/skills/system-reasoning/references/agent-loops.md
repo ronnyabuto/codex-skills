@@ -37,7 +37,7 @@ descendant; account for child processes when designing a hard runtime limit.
 
 ## Observe usage honestly
 
-On the locally verified Codex CLI 0.163.0, `codex exec --json` emits
+On the reviewed Codex CLI 0.170.0, `codex exec --json` emits
 `turn.completed` usage and error/failed-turn events. Retain events, thread IDs,
 exit status, elapsed time, relevant commands, and outcomes. Missing final answers
 or incomplete/failed streams are errors even if some useful output appeared.
@@ -50,7 +50,7 @@ do not add them again. This installed CLI has no `--max-budget-usd` or
 `--max-turns` flag. A budget checked after a case finishes prevents subsequent
 launches but cannot cap that case; state this limitation explicitly.
 
-Include failed work in usage totals and cost per completed task. Missing usage
+Keep every attempt when resuming. Grade completed outcomes separately from total consumed work; an interrupted attempt without usage remains unknown. Include failed work in usage totals and cost per completed task. Missing usage
 stays unknown. Convert tokens to dollars only with verified model, cache,
 provider, and pricing information; subscription usage is not incremental billed
 spend. A smaller or cheaper model may cost more per successful outcome.
@@ -71,7 +71,7 @@ changes justify it; do not add a provider merely because its tokens are cheap.
 
 ## Sources
 
-Checked 2026-10-16; recheck flags and availability for the installed client:
+Checked 2026-11-19; recheck flags and availability for the installed client:
 
 - [Non-interactive runs and usage](https://learn.chatgpt.com/docs/non-interactive-mode)
 - [CLI reference](https://learn.chatgpt.com/docs/developer-commands?surface=cli)

@@ -2,6 +2,7 @@
 import hashlib
 import importlib.util
 import json
+import math
 from pathlib import Path
 import re
 import subprocess
@@ -10,7 +11,21 @@ import sys
 import data_workflow_case
 
 
-CASES = json.loads(Path(__file__).with_name("outcome_contracts.json").read_text())
+def load_contracts(directory=Path(__file__).parent):
+    cases = {}
+    for name in ("outcome_contracts.json", "outcome_contracts.codex.json"):
+        definitions = json.loads((directory / name).read_text())
+        if cases.keys() & definitions.keys():
+            raise ValueError(f"duplicate case in {name}")
+        cases.update(definitions)
+    return cases
+
+
+CASES = load_contracts()
+
+
+def contracts_bytes():
+    return (json.dumps(CASES, sort_keys=True, indent=2) + "\n").encode()
 
 
 def user_prompt(case_id):
@@ -90,10 +105,18 @@ def after(db):
     return [row[0] for row in db.execute("SELECT name FROM customers ORDER BY id")]
 ''')
         context["source_hash"] = digest(cwd / "app.py")
-    elif case_id == "routine-control":
+    elif case_id in ("routine-control", "design-control"):
         write(cwd, "arithmetic.py", "def double(value):\n    return value + 1\n")
     elif case_id == "data-rehearsal":
         context["data_hashes"] = data_workflow_case.prepare(cwd)
+    elif case_id == "design-sizing":
+        write(cwd, "README.md", "# Orders\n\nOne VM runs app.py with the existing Postgres database. "
+              "About 500 orders/day each change status four times during a ten-hour working day. "
+              "The existing SMTP relay accepts 30 messages/s. Design order-status notifications.\n")
+        write(cwd, "app.py", 'def set_status(db, order_id, status):\n'
+              '    with db.transaction():\n'
+              '        db.execute("UPDATE orders SET status = %s WHERE id = %s", (status, order_id))\n')
+        context["source_hashes"] = {name: digest(cwd / name) for name in ("README.md", "app.py")}
     return context
 
 
@@ -129,7 +152,10 @@ def grade(case_id, context, events):
             if re.search(r"(?:fatal|error):", output, re.I):
                 continue
             no_head = "--no-write-fetch-head" in command and re.search(r"\borigin\b", command)
-            scratch = str(context["root"] / "origin.git") in command and context["base"] in output
+            origin = context["root"] / "origin.git"
+            announced_origin = re.search(r"^From\s+" + re.escape(str(origin.with_suffix("")))
+                                         + r"(?:\.git)?\s*$", output, re.M)
+            scratch = (str(origin) in command or announced_origin) and context["base"] in output
             if no_head or scratch:
                 fetches.append(call)
         check("fresh base retained", (context["base"] in fetched or fetches) and head == context["base"],
@@ -161,8 +187,9 @@ def grade(case_id, context, events):
         report = cwd / ".artifacts/recall.md"
         text = report.read_text() if report.is_file() else ""
         check("current decision and constraint recalled", all(value in text for value in ("73", "90", "17")) and re.search(r"lease|retry|retries", text, re.I), text)
-        check("source and date cited", "cedar-current.md" in text and "2026-10-15" in text, text)
-        check("superseded decision excluded", "120" not in text or bool(re.search(r"supersed|replac|old|previous", text, re.I)), text)
+        cited_date = re.search(r"\b(?:2026-10-15|Oct(?:ober)?\.?\s+15(?:th)?,?\s+2026|15(?:th)?\s+Oct(?:ober)?\.?\s+2026)\b", text, re.I)
+        check("source and date cited", "cedar-current.md" in text and cited_date, text)
+        check("superseded decision excluded", not re.search(r"\b120\b", text) or bool(re.search(r"supersed|replac|old|previous", text, re.I)), text)
         calls = tool_calls(events)
         bounded = []
         for call in calls:
@@ -192,18 +219,33 @@ def grade(case_id, context, events):
               {"saved": data, "replay_stdout": replay.stdout if replay else None, "replay_stderr": replay.stderr if replay else None})
         names = ["Ada", "Bo", "Cy", "Dee", "Eli", "Flo"]
         check("customer outcomes preserved", all(data.get(side, {}).get("names") == names for side in ("before", "after")), data)
-    elif case_id == "routine-control":
+    elif case_id in ("routine-control", "design-control"):
         probe = subprocess.run([sys.executable, "-I", "-c",
             'import runpy,sys,json; f=runpy.run_path(sys.argv[1])["double"]; print(json.dumps([f(x) for x in (-2,0,3)]))',
             str(cwd / "arithmetic.py")], capture_output=True, text=True, timeout=10)
         check("arithmetic outcomes corrected", probe.returncode == 0 and probe.stdout.strip() == "[-4, 0, 6]",
               {"stdout": probe.stdout, "stderr": probe.stderr})
         calls = tool_calls(events)
-        used = [call for call in calls if
-                (call["name"] == "Skill" and "current-docs" in str(call.get("input", {})))
-                or ("current-docs" in call.get("input", {}).get("command", "") and "SKILL.md" in call.get("input", {}).get("command", ""))
-                or (call["name"] == "Read" and "current-docs" in call.get("input", {}).get("file_path", ""))]
+        skill = CASES[case_id]["skill"]
+        used = [call for call in calls if skill in call["input"]["command"] and "SKILL.md" in call["input"]["command"]]
         check("unrelated skill not used", not used, used)
     elif case_id == "data-rehearsal":
         checks.extend(data_workflow_case.grade(cwd, context["data_hashes"]))
+    elif case_id == "design-sizing":
+        changed = [name for name, original in context["source_hashes"].items() if digest(cwd / name) != original]
+        check("source unchanged", not changed, changed)
+        path = cwd / ".artifacts/load.json"
+        load = json.loads(path.read_text()) if path.is_file() else {}
+        fields = ("daily_messages", "active_hours", "burst_multiplier", "peak_messages_per_second")
+        valid = isinstance(load, dict) and all(
+            type(load.get(key)) in (int, float) and math.isfinite(load[key]) for key in fields)
+        volume = valid and load["daily_messages"] == 2000 and load["active_hours"] == 10
+        check("daily volume consistent", volume, load)
+        derived = valid and load["active_hours"] > 0 and load["burst_multiplier"] >= 1
+        expected = (load["daily_messages"] / (load["active_hours"] * 3600) * load["burst_multiplier"]
+                    if derived else None)
+        consistent = derived and math.isclose(load["peak_messages_per_second"], expected, rel_tol=0.02)
+        design = cwd / ".artifacts/design.md"
+        check("derived peak consistent", consistent and design.is_file() and bool(design.read_text().strip()),
+              {"load": load, "expected_peak": expected})
     return checks
