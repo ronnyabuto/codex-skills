@@ -1,7 +1,7 @@
 # Validation — 2.2.0
 
 Reviewed 2026-11-19 with Codex CLI 0.170.0. The final offline suite covers
-81 tests, including privacy, concurrency, recovery, installer boundaries and
+82 tests, including privacy, concurrency, recovery, installer boundaries and
 real Git fetch grading. Two optional FFmpeg checks require an external binary;
 their absence does not establish media or GUI correctness.
 
@@ -50,7 +50,8 @@ Native event definitions and isolation settings were checked against official
 0.170.0 source. Resume tests cover all-attempt accounting, unknown usage, torn
 checkpoints, locks and changed-input rejection. Injected lost-attempt accounting,
 impossible peaks and stale sibling inventory were detected by regression tests.
-Installer tests preserve existing configuration and reject reads of other clients.
+Installer tests preserve existing configuration, reject reads of other clients,
+and verify scoped marketplace queries and bounded CLI failures.
 
 Historical evidence: four 2026-10-29 pairs used CLI 0.165.0 and GPT-6.1 Sol;
 all enabled arms and three baselines passed. The difference was bounded recall,

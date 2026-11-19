@@ -16,6 +16,7 @@ from uuid import uuid4
 ROOT = Path(__file__).resolve().parents[1]
 NAME = "ronny-codex-skills"
 MARKETPLACE = "ronny-local"
+_CLI_TIMEOUT_SECONDS = 120
 ORIGINALS = {
     "current-docs": "c10e8228a7bfec5a8d87c09844d63571ab392923405ba77d7bfe90e50760ce45",
     "project-audit": "0397dcc176bf95bccec7424c87a2a7ee3bbee0eb5830799ab91583045ff53821",
@@ -24,7 +25,11 @@ ORIGINALS = {
 
 
 def cli(*args):
-    result = subprocess.run(["codex", "plugin", *args, "--json"], capture_output=True, text=True)
+    try:
+        result = subprocess.run(["codex", "plugin", *args, "--json"], capture_output=True,
+                                text=True, timeout=_CLI_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(f"codex plugin {' '.join(args)} timed out after {_CLI_TIMEOUT_SECONDS} seconds") from exc
     if result.returncode:
         raise RuntimeError(f"codex plugin {' '.join(args)} failed: {result.stderr.strip()}")
     # Remote catalog warnings do not invalidate a verified local result.
@@ -148,7 +153,7 @@ def main():
     # Local marketplaces are read from their source; marketplace upgrade
     # refreshes Git sources and is unnecessary for this local directory.
     installed = cli("add", f"{NAME}@{MARKETPLACE}")
-    listing = cli("list")
+    listing = cli("list", "--marketplace", MARKETPLACE)
     entries = listing.get("installed", [])
     entry = next((item for item in entries if item.get("name") == NAME and item.get("marketplaceName") == MARKETPLACE), None)
     if not entry or not entry.get("enabled"):

@@ -38,7 +38,8 @@ The installer verifies `release-files.json`, backs up existing configuration,
 copies the inventoried release to `~/.codex/local-marketplaces/ronny-codex-skills`,
 installs through supported `codex plugin` commands and verifies cached resources.
 It refuses modified release sources, conflicting marketplace names and unknown
-duplicates. Run upgrades from the Git checkout; do not edit the plugin cache.
+duplicates. Verification lists only the local marketplace; CLI calls are bounded
+to 120 seconds. Run upgrades from the Git checkout; do not edit the plugin cache.
 Restart Codex after a plugin upgrade.
 
 `--migrate-duplicates` backs up only recognized byte-identical standalone skills

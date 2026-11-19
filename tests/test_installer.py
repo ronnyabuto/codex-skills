@@ -60,6 +60,16 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual((self.folder / "SKILL.md").read_text(), "preserve me")
         self.assertEqual(claude.read_text(), '{"hooks":{"Existing":[]}}')
 
+    def test_stalled_plugin_cli_has_a_bounded_failure(self):
+        binary = self.home / "bin"
+        binary.mkdir()
+        command = binary / "codex"
+        command.write_text("#!" + sys.executable + "\nimport time\ntime.sleep(5)\n")
+        command.chmod(0o755)
+        with patch.dict(os.environ, {"PATH": str(binary) + os.pathsep + os.environ["PATH"]}), patch.object(installer, "_CLI_TIMEOUT_SECONDS", 0.1):
+            with self.assertRaisesRegex(RuntimeError, "timed out"):
+                installer.cli("list", "--marketplace", installer.MARKETPLACE)
+
     def test_dry_run_does_not_write(self):
         environment = {key: value for key, value in os.environ.items() if key not in ("CODEX_HOME", "XDG_CONFIG_HOME")}
         with patch.object(Path, "home", return_value=self.home), patch.dict(os.environ, environment, clear=True), patch.object(sys, "argv", [str(SCRIPT), "--dry-run", "--vault", str(self.home / "chosen-vault")]), patch("builtins.print"):
@@ -88,7 +98,7 @@ class InstallerTests(unittest.TestCase):
             if args[0] == "add":
                 shutil.copytree(source / "plugins" / installer.NAME, installed)
                 return {"installedPath": str(installed)}
-            if args == ("list",):
+            if args == ("list", "--marketplace", installer.MARKETPLACE):
                 return {"installed": [{"name": installer.NAME, "marketplaceName": installer.MARKETPLACE, "enabled": True}]}
             raise AssertionError(f"Unexpected CLI command: {args}")
         environment = {key: value for key, value in os.environ.items() if key not in ("CODEX_HOME", "XDG_CONFIG_HOME")}
@@ -105,6 +115,7 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(len(list((installed / "skills").iterdir())), 12)
         self.assertTrue(list((self.home / ".codex/backups").rglob("previous.txt")))
         self.assertNotIn(("marketplace", "upgrade", installer.MARKETPLACE), calls)
+        self.assertIn(("list", "--marketplace", installer.MARKETPLACE), calls)
 
     def test_release_inventory_excludes_git_and_private_artifacts(self):
         root = self.home / "package"
