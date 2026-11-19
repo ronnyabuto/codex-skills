@@ -15,8 +15,12 @@ def inventory():
     files = {}
     for name in sorted(set(result.stdout.split("\0")) - {"", "release-files.json"}):
         path = (ROOT / name).resolve()
-        if not path.is_relative_to(ROOT) or not path.is_file():
+        if not path.is_relative_to(ROOT):
             raise ValueError(f"release file must remain inside the repository: {name}")
+        if not path.exists():
+            continue  # A tracked deletion must disappear from the next release before staging.
+        if not path.is_file():
+            raise ValueError(f"release entry is not a regular file: {name}")
         files[name] = hashlib.sha256(path.read_bytes()).hexdigest()
     return files
 

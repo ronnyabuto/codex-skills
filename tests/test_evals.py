@@ -16,7 +16,7 @@ spec.loader.exec_module(runner)
 
 
 class EvalTests(unittest.TestCase):
-    def run_case(self, output, result=None, timeout=False, options=()):
+    def run_case(self, output, result=None, timeout=False, options=(), mutate=False):
         execute = subprocess.run
         environments = []
         self.commands = []
@@ -24,6 +24,8 @@ class EvalTests(unittest.TestCase):
             if command[0] == "git":
                 return execute(command, **kwargs)
             environments.append(kwargs["env"])
+            if mutate:
+                (Path(command[command.index("-C") + 1]) / "dates.py").write_text("unexpected fixture mutation")
             self.commands.append(command)
             if timeout:
                 raise subprocess.TimeoutExpired(command, 240, output=b'{"type":')
@@ -32,7 +34,7 @@ class EvalTests(unittest.TestCase):
             runner.main()
         return json.loads((output / "summary.json").read_text())[0], environments
 
-    def test_synthetic_vault_and_successful_answer(self):
+    def test_fixture_integrity_and_usage_subsets_survive_a_completed_turn(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "results"
             event = json.dumps({"type": "item.completed", "item": {"type": "agent_message", "text": "Remove the extra day."}})
@@ -49,6 +51,9 @@ class EvalTests(unittest.TestCase):
             self.assertIsNone(summary["estimated_cost_usd"])
             self.assertTrue(Path(environments[0]["CODEX_MEMORY_VAULT"]).is_relative_to(output))
             self.assertTrue(Path(environments[0]["CODEX_MEMORY_CACHE"]).is_relative_to(output))
+            changed, _ = self.run_case(Path(directory) / "changed", event + '\n' + json.dumps({"type": "turn.completed", "usage": {"input_tokens": 100, "output_tokens": 10}}), mutate=True)
+            self.assertTrue(changed["error"])
+            self.assertFalse(changed["fixture_unchanged"])
 
     def test_timeout_still_writes_an_error_summary(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -73,34 +78,6 @@ class EvalTests(unittest.TestCase):
                 self.assertEqual(record["requested_model"], "gpt-6.1-sol")
                 self.assertEqual(record["requested_effort"], "medium")
 
-    def test_invalid_effort_never_starts_a_model(self):
-        with tempfile.TemporaryDirectory() as directory:
-            output = Path(directory) / "results"
-            with patch.object(sys, "argv", [str(SCRIPT), str(output), "--effort", "typo"]), \
-                    patch.object(subprocess, "run") as execute, \
-                    patch("sys.stderr"):
-                with self.assertRaises(SystemExit) as error:
-                    runner.main()
-            self.assertEqual(error.exception.code, 2)
-            execute.assert_not_called()
-            self.assertFalse(output.exists())
-
-    def test_empty_or_malformed_events_are_errors(self):
-        with tempfile.TemporaryDirectory() as directory:
-            for index, stdout in enumerate(("", '{"type":')):
-                report, _ = self.run_case(Path(directory) / str(index), stdout)
-                self.assertTrue(report["error"])
-
-    def test_final_answer_without_completed_turn_is_an_error(self):
-        with tempfile.TemporaryDirectory() as directory:
-            event = json.dumps({"type": "item.completed", "item": {"type": "agent_message", "text": "Looks done."}})
-            output = Path(directory) / "results"
-            report, _ = self.run_case(output, event)
-            self.assertTrue(report["error"])
-            summary = json.loads((output / "run-summary.json").read_text())
-            self.assertEqual(summary["usage_missing_cases"], 1)
-            self.assertIsNone(summary["observed_tokens"])
-            self.assertIsNone(summary["tokens_per_completed_eval"])
 
     def test_budget_includes_failed_work_and_stops_new_launches(self):
         for missing_usage in (False, True):

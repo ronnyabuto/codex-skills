@@ -1,174 +1,59 @@
-# Release validation — 2.1.1
+# Validation — 2.2.0
 
-- The paired and system-reasoning runners accept optional explicit effort.
-  Paired runs apply the same per-session override in both isolated arms; smoke
-  runs can also select an exact model. Reports distinguish requested effort
-  from observed model behavior. Omitting the options preserves existing defaults.
-- All 70 offline tests complete: 68 pass and two optional real-media tests skip
-  because FFmpeg is not configured locally. New checks cover model/effort
-  forwarding, both-arm parity, omitted-option compatibility and rejecting invalid
-  effort before model calls. Existing memory, hook and installer tests pass.
-- Package validation, the release inventory, and the sibling contract check
-  pass. The twelve skill entrypoints, helpers, hooks and standing guidance are
-  unchanged. The new Sol 6.1 medium guide is available on demand.
-- No live model comparison or new token-savings claim is made. No paid
-  evaluations, GUI recording, global instruction changes or hook changes were
-  performed as offline verification. Installation uses the existing verified
-  release and supported plugin workflow.
+Reviewed 2026-11-19 with Codex CLI 0.170.0. The final offline suite covers
+81 tests, including privacy, concurrency, recovery, installer boundaries and
+real Git fetch grading. Two optional FFmpeg checks require an external binary;
+their absence does not establish media or GUI correctness.
 
-## Public release validation — 2.0.0
+```bash
+python3 scripts/build_release.py --check
+python3 scripts/validate.py
+python3 -B -m unittest discover -s tests -v
+```
 
-- All 57 offline tests pass on Python 3.14.4 / SQLite 3.46.1. This includes the
-  existing 48 memory, hooks, installer and eval cases, two release-inventory
-  installation cases, and seven original-recorder cases.
-- The independently written recorder was tested with FFmpeg 7.0.2 from an
-  isolated test dependency outside this repository. Real synthetic video was
-  encoded, finalized to MP4 and decoded. Concurrent annotations, graceful stop,
-  automatic duration limits, corrupt media, missing dependencies, capture
-  failure, completed-session idempotence and output preservation were checked.
-- These media tests establish recorder/toolchain behavior. Desktop capture
-  permissions and real application interaction were not tested on Linux,
-  macOS or Windows for this release. Native Wayland capture is not implemented.
-  No synthetic frame is presented as GUI evidence.
-- Root and bundled plugin MIT licenses match. The inherited recorder is excluded
-  from this public source and initial Git history; its known hash is rejected
-  by structural validation. The new recorder has a different command and
-  sidecar-report protocol, documented in its reference.
-- The release inventory is rebuilt from Git-visible, non-ignored source files.
-  Installation validates file contents before changing configuration and copies
-  only that snapshot. Tests reject modified resources, traversal, Git/private
-  artifact paths and symlinks that escape the package. An unrelated local file
-  cannot enter the installed package merely by being in the source checkout.
-- All twelve skills, portable and compatibility manifests, contained references
-  and Python syntax pass structural validation. Plugin resources resolve inside
-  the installed plugin; the license is bundled as well as present at repo root.
-- The CI workflow checks Python 3.11 and 3.14 with FFmpeg and no model calls.
-  Its actions are pinned to verified upstream release commits. CI results are
-  independent of the local results recorded here.
-- Previously completed live outcome comparisons are retained below as historical
-  local-release evidence. They are not new model evaluations of release 2.0.0.
-  Raw transcripts, private notes, authentication data, captures and installation
-  backups are excluded from public release contents.
-- The installed plugin identifier remains `ronny-codex-skills@ronny-local`.
-  The source repository is `ronnyabuto/codex-skills`. Installation retains the
-  chosen vault and existing hook definitions/trust and does not target Claude.
+## Live evaluations
 
-## Local release validation — 2026-10-29 (1.4.0)
+The [aggregate results](evals/results/2026-11-19.json) retain requested model and
+effort, candidate hashes, per-arm grades and reported usage. Raw native events,
+fixtures, original grades and regraded evidence stay outside the repository.
+No private transcripts, credentials or real vault notes are published.
 
-- All 48 offline tests pass. Existing memory, hooks, installer and smoke-runner
-  tests are retained. New cases cover WAL lock release, persistent-lock recovery,
-  corrupt-index/nonfatal-hook failure, native event grading, paired fixture and
-  snapshot isolation, token admission, unknown usage, timeout cleanup, baseline
-  contamination, valid sandbox-compatible fetches and protected output files.
-- All twelve entrypoints, manifests, contained references, Python syntax and
-  unchanged recorder provenance pass package validation. Python 3.14.4 and
-  SQLite 3.46.1 were used; the paired runner requires Python 3.11+.
-- The original Python helper failed concurrent cold startup on round 5 with
-  eight workers. After the bounded WAL initialization correction, 30 rounds
-  of eight workers completed without failures (240 successful starts).
-- Four live synthetic enabled/disabled comparisons were completed with Codex
-  CLI 0.165.0 and the user's selected `gpt-6.1-sol` model. All four enabled arms
-  pass. Three baselines pass; the memory baseline recalls the correct decision
-  but reads whole notes and fails only the bounded-retrieval criterion.
-  This is a procedural difference, not evidence of better factual recall or
-  a statistically established quality/speed improvement.
-- Fresh-base grading was corrected to accept successful fetches without
-  FETCH_HEAD and fresh verification through a scratch repository. The worktree
-  pair was regraded against retained native traces and actual Git state;
-  original grades were preserved. Both arms pass under the corrected rubric.
-- The earlier non-isolated comparison is invalid: its disabled arm manually
-  opened the skill despite its discovery override. Final comparisons use
-  private transient runtime homes and omit the disabled entry point. Only an
-  authentication-file link enters the temporary home; credentials are not
-  retained with evidence. Commands still use Codex workspace-write sandboxing.
-- The smoke catalog and prior results remain historical evidence. Shared native
-  parsing now serves both runners, with cache/reasoning subsets counted once.
-  No unsupported dollar/turn caps, Claude invocation fields or permanent skill
-  visibility changes were added. Dollar cost remains unknown.
-- Evidence is retained locally in `/tmp/codex-skills-evidence-1029/`: cold-start
-  before/after results, `live-worktree-isolated/regraded-summary.json`, and the
-  six remaining arms under `live-remaining-isolated/`. Invalid, incomplete and
-  sandbox-blocked attempts remain separate; their usage is not hidden or
-  presented as valid comparisons.
-- This source is upgraded through `scripts/install_local.py`, which backs up
-  configuration and the prior marketplace, uses supported Codex plugin commands,
-  compares every installed resource, and verifies Claude state is unchanged.
-  Existing vault selection and hooks are preserved; no trust bypass is used.
-  A new Codex session is required to load the updated plugin instructions.
-- No GUI recorder changes or new desktop recording claims are part of this
-  release. Structural checks and these small rubrics do not establish complete
-  model workflow compliance or resistance to deliberate rubric gaming.
+Eight pairs requested GPT-6.2 Sol at medium effort. Five cases passed in both
+arms. Assigned-workspace freshness, audit limitation disclosure and bounded
+retrieval failed the original full rubrics. Both audit arms found the defect;
+the enabled arm also reproduced it. Memory answers recovered the correct
+decision but did not use bounded source reads.
 
-## Release validation — 2026-10-16 (1.3.0)
+A fresh pair tested the clarified assigned-workspace rule: the enabled arm
+fetched into a scratch repository and compared the fresh commit to HEAD; the
+baseline omitted the fetch. Its original grade was corrected after the trace
+showed a valid variable-based remote. Equivalent human-readable dates are now
+accepted, while wrong dates remain rejected. A deterministic hash containing
+`120` protects against confusing a repository ID with the superseded value.
+Original grades are retained rather than overwritten.
 
-- All 36 offline tests pass. The two added cases cover incomplete terminal
-  streams and admission after failed-work token consumption or unknown usage.
-  Existing usage checks now use a realistic completed-turn event and verify
-  that cache/reasoning subsets are not counted twice.
-- All twelve entrypoints, manifests, contained references, Python syntax and
-  unchanged recorder provenance pass package validation.
-- Codex CLI 0.163.0 help and current official documentation were checked for
-  JSONL usage, sandboxing, ephemeral runs and scheduled-task boundaries.
-- Loop and test-selection guidance is adapted to Codex. No Claude commands,
-  completion-hook fields, or unsupported dollar/turn cap flags are assumed.
-- This release adds two unrun behavioral scenarios and preserves previous IDs.
-  No paid model benchmark or GUI recording was run for this release.
-- The offline suite reports a pre-existing Python 3.14 ResourceWarning for an
-  installer SQLite probe; all tests pass. That unrelated issue remains outside
-  this change.
+Both design answers covered load arithmetic, component choice, bounded calls,
+acknowledgement loss, rollout/rollback and the 10x bottleneck on primary-agent
+review. The added reference showed no benefit and used 19,841 more reported
+tokens in its arm, so it was removed. The existing system-reasoning skill and
+arithmetic evaluation remain. No human approval or production email test is claimed.
 
-## Release validation — 2026-10-13 (1.2.2)
+The first outer-sandbox run was excluded after file/tool failures; known usage
+and its interrupted attempt remain disclosed. The valid full run resumed after
+its admission threshold without repeating completed arms. These small comparisons
+do not establish statistical quality, speed or billing gains. Known audit and
+retrieval limitations remain explicit, not reclassified as passing outcomes.
 
-- All 34 offline tests pass; all twelve skill entrypoints, manifests, contained
-  references, Python syntax and recorder provenance pass structural validation.
-- Synthetic reproductions verify search diversity, redaction/context preservation,
-  Codex-only namespace isolation, concurrent indexing and rollback, hook payload
-  validation, independent eval memory and error reporting.
-- Python 3.14.4 / SQLite 3.46.1 supplies FTS5 on this PC. The installer now checks
-  runtime query capabilities before touching user configuration.
-- The installed 1.2.1 source and cache matched before the upgrade. Version 1.2.2
-  is installed through Codex plugin commands, not cache-file edits.
-- The chosen private Codex vault is preserved. Global guidance changes only this
-  package's marked block. Existing hook definitions/trust and Claude configuration
-  are preserved. Native session restarts are needed to load the new plugin.
-- No new paid agent evals or GUI recordings were run; prior live smoke results
-  below are historical evidence, not results for this release.
+## Other verification
 
-## Release validation — 2026-10-09 (1.2.0)
+Native event definitions and isolation settings were checked against official
+0.170.0 source. Resume tests cover all-attempt accounting, unknown usage, torn
+checkpoints, locks and changed-input rejection. Injected lost-attempt accounting,
+impossible peaks and stale sibling inventory were detected by regression tests.
+Installer tests preserve existing configuration and reject reads of other clients.
 
-- Package validation and all twelve skill entrypoints pass structural checks.
-- Twenty-four isolated tests pass: memory scoping/imports, installation safety,
-  guidance preservation, hook preservation/idempotence, archive updates,
-  exclusions, redaction, malformed/torn transcripts, search/read, and recall.
-- Five live system-reasoning smoke cases passed on this PC with Codex CLI
-  0.161.0 and its default GPT-6.1-Sol model. Three positive cases read the skill;
-  routine CRUD and an established local bug did not. Answers and harmless
-  probes were reviewed; all fixture hashes remained unchanged. See
-  [evals/system-reasoning-results.json](evals/system-reasoning-results.json).
-  These are single runs on synthetic fixtures, without a comparative baseline.
-  The other catalog scenarios have not been run.
-- The installed/enabled 1.2.0 plugin contains all twelve skill entrypoints and
-  resources. Global Codex AGENTS.md includes the scoped guidance block.
-  Installation preserves Claude settings/skills and the existing Codex vault.
-- This CLI's hook browser did not discover bundled plugin hooks. Installation
-  uses user-level ~/.codex/hooks.json instead. All three exact hook definitions
-  were reviewed and trusted through the native `/hooks` interface; the browser
-  reports one installed and active handler for each event.
-- A real local Codex session archived on shutdown into the configured vault;
-  search and bounded reads recovered its unique test marker. A native `/compact`
-  archived another session before compaction completed. The immediate model
-  continuation identified the correct vault and pre-compaction archive from
-  its injected pointer without tools. Hook JSON recall and compaction pointers
-  also pass isolated tests. These results concern local
-  Codex execution, not cloud-orchestrated hook support.
-
-## Previous release — 2026-10-02
-
-- All eleven skills pass Codex's bundled quick_validate.py.
-- Portable/Codex compatibility manifests, marketplace, relative references, entrypoint lengths, Python syntax and retained recorder hash pass scripts/validate.py.
-- Fifteen isolated tests pass: ten memory tests and five installation safety tests. They cover scoped recall, worktree identity, bounded output, fresh indexes, redaction examples, supersession, concurrent note writes, containment, explicit transcript imports, preserved duplicates after a failed plugin verification, modified/symlink duplicate refusal, mutation-free dry runs and a local upgrade that preserves Claude/memory configuration without attempting a Git-marketplace refresh.
-- One hundred ten behavioral scenarios are provided, ten per skill. They are marked not-run; no paid model evaluations were performed. The new managed-audit cases cover manager requests, narrow non-trigger requests, evidence without commits, missing tools and preservation of audit permissions.
-- The retained recorder's doctor was run during the preceding review and reported missing ffmpeg/ffprobe and no capture source in that execution environment. GUI recording, interruption recovery and browser capture are not end-to-end validated here.
-- Local installation is checked with codex plugin list --json and byte comparisons against all installed skill entrypoints. The installer compares Claude settings, skill contents and symlink targets before/after the operation. The original three standalone Codex skills were backed up during initial installation; updates retain those backups and the memory configuration.
-
-The structural checks use this package's supported subset, not full remote JSON Schema validation. Passing them does not prove agent workflow quality. The unit tests use only synthetic notes/transcripts and disposable Git fixtures.
+Historical evidence: four 2026-10-29 pairs used CLI 0.165.0 and GPT-6.1 Sol;
+all enabled arms and three baselines passed. The difference was bounded recall,
+not improved factual recall. The release-2.0.0 recorder was verified with FFmpeg
+7.0.2 on synthetic media; that does not establish current GUI capture.
+See [provenance](plugins/ronny-codex-skills/PROVENANCE.md).

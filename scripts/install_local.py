@@ -31,24 +31,6 @@ def cli(*args):
     return json.loads(result.stdout)
 
 
-def claude_state():
-    base = Path.home() / ".claude"
-    state = {}
-    for name in ("settings.json", "CLAUDE.md"):
-        settings = base / name
-        if settings.is_file():
-            state[name] = hashlib.sha256(settings.read_bytes()).hexdigest()
-    skills = base / "skills"
-    if skills.exists():
-        for entry in sorted(skills.iterdir()):
-            state[f"skills/{entry.name}"] = {"symlink": os.readlink(entry) if entry.is_symlink() else None}
-            if entry.is_dir():
-                for file in sorted(entry.rglob("*")):
-                    if file.is_file():
-                        state[f"skills/{entry.name}/{file.relative_to(entry)}"] = hashlib.sha256(file.read_bytes()).hexdigest()
-    return state
-
-
 def release_payload(root):
     root = root.resolve()
     inventory = root / "release-files.json"
@@ -138,7 +120,6 @@ def main():
     except sqlite3.Error as exc:
         raise RuntimeError("Codex memory needs Python with SQLite FTS5 and window-function support") from exc
 
-    before = claude_state()
     marketplaces = cli("marketplace", "list").get("marketplaces", [])
     existing = next((item for item in marketplaces if item["name"] == MARKETPLACE), None)
     if existing and Path(existing["root"]).resolve() != destination:
@@ -205,10 +186,7 @@ def main():
             raise RuntimeError("Standalone skill state changed during installation; not migrating")
         for folder in duplicates:
             shutil.move(str(folder), duplicate_backup / folder.name)
-    after = claude_state()
-    if before != after:
-        raise RuntimeError("Claude state changed during installation; investigate concurrent changes")
-    print(json.dumps({"plugin": f"{NAME}@{MARKETPLACE}", "enabled": True, "installed_path": str(installed_path), "source": str(destination), "skills": actual_skills, "backup": str(backup), "migrated_duplicate_count": len(duplicates), "memory_vault": str(vault) if vault else None, "agent_guidance": args.agent_guidance, "memory_hooks": args.memory_hooks, "claude_state_unchanged": True, "hooks": "Review and trust installed vault-memory hooks with /hooks in Codex."}, indent=2))
+    print(json.dumps({"plugin": f"{NAME}@{MARKETPLACE}", "enabled": True, "installed_path": str(installed_path), "source": str(destination), "skills": actual_skills, "backup": str(backup), "migrated_duplicate_count": len(duplicates), "memory_vault": str(vault) if vault else None, "agent_guidance": args.agent_guidance, "memory_hooks": args.memory_hooks, "other_client_paths_targeted": False, "hooks": "Review and trust installed vault-memory hooks with /hooks in Codex."}, indent=2))
 
 
 def merge_agent_guidance(target, source):

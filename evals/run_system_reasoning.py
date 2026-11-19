@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 import subprocess
 
-from codex_session import EFFORT_LEVELS, analyze
+from codex_session import EFFORT_LEVELS, LIMIT_ERROR, analyze
 
 CASES = [
     ("caching", True, "Our dashboard is slow. Assess whether Redis addresses the bottleneck before changing anything.",
@@ -95,6 +95,7 @@ def main():
             observed_tokens += tokens
         report = {
             "case": name, "error": error or not unchanged,
+            "error_detail": session["error"], "limit_evidence": session["limit_evidence"],
             "requested_model": args.model, "requested_effort": args.effort,
             "expected_trigger": expected, "skill_read": invoked,
             "fixture_unchanged": unchanged, "behavior_review": "pending",
@@ -109,6 +110,10 @@ def main():
                 admission_stop_reason = "usage_unknown"
             elif observed_tokens >= args.token_budget:
                 admission_stop_reason = "token_budget"
+        if session["error"] == LIMIT_ERROR:
+            admission_stop_reason = LIMIT_ERROR
+        elif error or not unchanged:
+            admission_stop_reason = admission_stop_reason or "session_error"
         reports.append(report)
         print(json.dumps(report), flush=True)
     (args.output / "summary.json").write_text(json.dumps(reports, indent=2) + "\n")
@@ -128,7 +133,7 @@ def main():
         "behavior_review": "pending",
     }
     (args.output / "run-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
-    return int(bool(summary["errors"] or summary["skipped"]))
+    return 75 if admission_stop_reason == LIMIT_ERROR else int(bool(summary["errors"] or summary["skipped"]))
 
 
 if __name__ == "__main__":

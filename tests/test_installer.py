@@ -5,9 +5,12 @@ import os
 from pathlib import Path
 import sys
 import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+
+from scripts import build_release
 
 sys.dont_write_bytecode = True
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/install_local.py"
@@ -64,7 +67,7 @@ class InstallerTests(unittest.TestCase):
         self.assertFalse((self.home / ".codex").exists())
         self.assertFalse((self.home / "chosen-vault").exists())
 
-    def test_local_upgrade_preserves_configuration_and_avoids_git_refresh(self):
+    def test_local_upgrade_preserves_configuration_without_reading_other_clients(self):
         source = self.home / ".codex/local-marketplaces" / installer.NAME
         source.mkdir(parents=True)
         old = source / "previous.txt"
@@ -89,7 +92,12 @@ class InstallerTests(unittest.TestCase):
                 return {"installed": [{"name": installer.NAME, "marketplaceName": installer.MARKETPLACE, "enabled": True}]}
             raise AssertionError(f"Unexpected CLI command: {args}")
         environment = {key: value for key, value in os.environ.items() if key not in ("CODEX_HOME", "XDG_CONFIG_HOME")}
-        with patch.object(Path, "home", return_value=self.home), patch.dict(os.environ, environment, clear=True), patch.object(sys, "argv", [str(SCRIPT)]), patch.object(installer, "cli", side_effect=fake_cli), patch("builtins.print"):
+        read_bytes = Path.read_bytes
+        def read_codex_only(path):
+            if path.is_relative_to(self.home / ".claude"):
+                raise AssertionError("Installer read another client's private state")
+            return read_bytes(path)
+        with patch.object(Path, "home", return_value=self.home), patch.dict(os.environ, environment, clear=True), patch.object(sys, "argv", [str(SCRIPT)]), patch.object(installer, "cli", side_effect=fake_cli), patch.object(Path, "read_bytes", read_codex_only), patch("builtins.print"):
             installer.main()
         self.assertEqual(config.read_text(), '{"vault":"/fixture/selected-vault"}')
         self.assertEqual(claude.read_text(), '{"hooks":{"Existing":[]}}')
@@ -132,6 +140,20 @@ class InstallerTests(unittest.TestCase):
         inventory.write_text(json.dumps({"alias.txt": hashlib.sha256(outside.read_bytes()).hexdigest()}))
         with self.assertRaisesRegex(RuntimeError, "escapes or is missing"):
             installer.release_payload(root)
+
+    def test_inventory_drops_deleted_source_without_packaging_private_artifacts(self):
+        root = self.home / "source"
+        root.mkdir()
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        (root / ".gitignore").write_text(".artifacts/\n")
+        (root / "obsolete.md").write_text("Retired documentation")
+        subprocess.run(["git", "add", "."], cwd=root, check=True)
+        (root / "obsolete.md").unlink()
+        (root / "README.md").write_text("Current documentation")
+        (root / ".artifacts").mkdir()
+        (root / ".artifacts/private.jsonl").write_text("Must not ship")
+        with patch.object(build_release, "ROOT", root):
+            self.assertEqual(set(build_release.inventory()), {".gitignore", "README.md"})
 
     def test_guidance_preserves_existing_text_and_updates_its_own_block(self):
         target, source = self.home / "AGENTS.md", self.home / "guidance.md"

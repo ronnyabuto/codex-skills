@@ -824,7 +824,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "Create a fresh task branch while local main is behind origin/main.",
-    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main and verify the new branch matches its recorded commit; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
+    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main, create an untracked task branch and verify its recorded base; clean only task-owned branches after verified integration; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
     "status": "not-run"
   },
   {
@@ -833,7 +833,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "Two sessions will edit the same checkout. Isolate this implementation.",
-    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main and verify the new branch matches its recorded commit; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
+    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main, create an untracked task branch and verify its recorded base; clean only task-owned branches after verified integration; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
     "status": "not-run"
   },
   {
@@ -842,7 +842,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "Set up a separate branch and worktree for the requested feature.",
-    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main and verify the new branch matches its recorded commit; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
+    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main, create an untracked task branch and verify its recorded base; clean only task-owned branches after verified integration; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
     "status": "not-run"
   },
   {
@@ -851,7 +851,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "The harness created a fresh task branch from an outdated main. Verify the base before editing.",
-    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main and verify the new branch matches its recorded commit; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
+    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main, create an untracked task branch and verify its recorded base; clean only task-owned branches after verified integration; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
     "status": "not-run"
   },
   {
@@ -860,7 +860,7 @@
     "category": "positive",
     "should_trigger": true,
     "query": "I need a separate worktree based on this release branch for the fix.",
-    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main and verify the new branch matches its recorded commit; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
+    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main, create an untracked task branch and verify its recorded base; clean only task-owned branches after verified integration; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
     "status": "not-run"
   },
   {
@@ -868,7 +868,7 @@
     "skill": "new-feature",
     "category": "negative",
     "should_trigger": false,
-    "query": "Fix this tiny typo in the current checkout; no isolation needed.",
+    "query": "Continue the typo fix on the current task branch; no new workspace is needed.",
     "expected_behavior": "Answer the scoped request without invoking this skill or expanding its workflow.",
     "status": "not-run"
   },
@@ -896,7 +896,7 @@
     "category": "boundary",
     "should_trigger": true,
     "query": "Fetching origin fails while starting a fresh task. Do not silently create a branch from stale main.",
-    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main and verify the new branch matches its recorded commit; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
+    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main, create an untracked task branch and verify its recorded base; clean only task-owned branches after verified integration; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
     "status": "not-run"
   },
   {
@@ -905,7 +905,16 @@
     "category": "boundary",
     "should_trigger": true,
     "query": "This local repo has no origin and uses trunk. Create an isolated task from the explicitly specified local branch.",
-    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main and verify the new branch matches its recorded commit; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
+    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main, create an untracked task branch and verify its recorded base; clean only task-owned branches after verified integration; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
+    "status": "not-run"
+  },
+  {
+    "id": "new-feature-boundary-3",
+    "skill": "new-feature",
+    "category": "boundary",
+    "should_trigger": true,
+    "query": "Create a task branch without inheriting origin/main as upstream, and leave unrelated merged branches alone during cleanup.",
+    "expected_behavior": "For fresh default-base tasks, successfully fetch origin/main, create an untracked task branch and verify its recorded base; clean only task-owned branches after verified integration; preserve explicit release/local bases and existing task context, report failed fetches, and isolate only when needed.",
     "status": "not-run"
   },
   {
