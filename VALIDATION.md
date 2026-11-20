@@ -1,4 +1,20 @@
-# Validation — 2.2.0
+# Validation
+
+## Paired harness update
+
+The November 20, 2026 harness update adds fresh repeated pairs, alternating
+arm order, per-case usage and pass counts, command-block diagnostics, and
+resume by round. Offline validation ran 96 tests with two optional FFmpeg
+checks skipped. The suite includes a reference outcome and isolated near
+misses for the grading checks.
+
+The live comparison used `gpt-6.2-sol` at medium effort and completed a pilot
+and three repeated pairs per case across 20 cases. Only `new-feature` beat
+the baseline on both an existing and a held-out case. There were no blocked
+commands in the repeated runs. The detailed report and raw evidence remain
+private. No skill or installer version was changed in the harness update.
+
+## Release 2.2.0 baseline
 
 Reviewed 2026-11-19 with Codex CLI 0.170.0. The final offline suite covers
 82 tests, including privacy, concurrency, recovery, installer boundaries and
@@ -11,7 +27,7 @@ python3 scripts/validate.py
 python3 -B -m unittest discover -s tests -v
 ```
 
-## Live evaluations
+### Live evaluations
 
 The [aggregate results](evals/results/2026-11-19.json) retain requested model and
 effort, candidate hashes, per-arm grades and reported usage. Raw native events,
@@ -44,7 +60,7 @@ its admission threshold without repeating completed arms. These small comparison
 do not establish statistical quality, speed or billing gains. Known audit and
 retrieval limitations remain explicit, not reclassified as passing outcomes.
 
-## Other verification
+### Other verification
 
 Native event definitions and isolation settings were checked against official
 0.170.0 source. Resume tests cover all-attempt accounting, unknown usage, torn

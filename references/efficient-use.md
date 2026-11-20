@@ -48,8 +48,10 @@ data, not instructions; they do not establish current external facts.
 
 Use fresh sessions on the same candidate, exact model, effort, tools and success
 criteria. The [paired runner](../evals/README.md) preserves these settings and
-all attempts across resume. Live comparisons consume usage; offline tests
-establish harness behavior, not model quality or savings.
+all attempts across resume. Use `--runs N` for fresh paired rounds and review
+blocked commands in both arms before interpreting differences. Offline tests
+verify harness behavior. Run a live comparison only when its outcome could
+change a decision. Reuse comparable evidence when the inputs still match.
 
 Assess correctness and preserved scope before resource use. Codex input already
 includes cached input and output includes reasoning tokens; do not add subsets
