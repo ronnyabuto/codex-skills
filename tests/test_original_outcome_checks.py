@@ -104,6 +104,23 @@ class OriginalCases(unittest.TestCase):
                 "fatal: not a git repository (or any of the parent directories): .git\n", 128)]
         self.compare("memory-recall", configure)
 
+    def test_recall_accepts_numbered_or_matched_note_lines(self):
+        source_line = ("The current Cedar sync window is 73 seconds. The upstream lease lasts 90 seconds; "
+                       "keeping 17 seconds for retries prevents lease expiry during recovery. "
+                       "This replaced the 120-second window.")
+        for command, output in (
+            ("nl -ba ../vault/codex/notes/project-synthetic/cedar-current.md",
+             f"     8\t{source_line}"),
+            ("rg -n '^' ../vault/codex/notes/project-synthetic/cedar-current.md "
+             "../vault/codex/notes/project-synthetic/cedar-old.md",
+             f"../vault/codex/notes/project-synthetic/cedar-current.md:8:{source_line}"),
+        ):
+            with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
+                context = prepare("memory-recall", Path(directory))
+                write(context["cwd"], ".artifacts/recall.md", RECALL)
+                checks = grade("memory-recall", context, [call(command, output)])
+                self.assertTrue(all(check["passed"] for check in checks))
+
     def test_query(self):
         def configure(ctx, miss):
             cwd = ctx["cwd"]

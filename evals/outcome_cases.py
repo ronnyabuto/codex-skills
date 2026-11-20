@@ -199,10 +199,10 @@ def grade(case_id, context, events):
             command, output = call["input"]["command"], call["output"]
             targeted = "cedar-current.md" in command and (
                 (" read " in command and "--lines" in command) or "sed -n" in command
-                or "head -" in command or "cat " in command)
+                or "head -" in command or "cat " in command or "nl " in command or "rg " in command)
             # A focused read of this short note is proportionate. In a composite
             # command the final status can describe a trailing, unrelated action.
-            if targeted and "Cedar sync window" in output and "73 seconds" in output:
+            if targeted and "The current Cedar sync window is 73 seconds." in output:
                 bounded.append(call)
         check("bounded source retrieval observed", bounded, bounded)
     elif case_id == "query-evidence":
