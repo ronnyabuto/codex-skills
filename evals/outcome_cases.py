@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 import data_workflow_case
+import skill_value_cases
 
 
 def load_contracts(directory=Path(__file__).parent):
@@ -117,15 +118,18 @@ def after(db):
               '    with db.transaction():\n'
               '        db.execute("UPDATE orders SET status = %s WHERE id = %s", (status, order_id))\n')
         context["source_hashes"] = {name: digest(cwd / name) for name in ("README.md", "app.py")}
+    elif case_id in skill_value_cases.SOURCES:
+        skill_value_cases.prepare(case_id, context, git)
     return context
 
 
-def tool_calls(events):
+def tool_calls(events, *, successful_only=True):
     return [{"name": "Bash", "input": {"command": event["item"].get("command", "")},
-             "output": event["item"].get("aggregated_output", "")}
+             "output": event["item"].get("aggregated_output", ""),
+             "exit_code": event["item"].get("exit_code")}
             for event in events if event.get("type") == "item.completed"
             and event.get("item", {}).get("type") == "command_execution"
-            and event["item"].get("exit_code") == 0]
+            and (not successful_only or event["item"].get("exit_code") == 0)]
 
 
 def grade(case_id, context, events):
@@ -190,13 +194,16 @@ def grade(case_id, context, events):
         cited_date = re.search(r"\b(?:2026-10-15|Oct(?:ober)?\.?\s+15(?:th)?,?\s+2026|15(?:th)?\s+Oct(?:ober)?\.?\s+2026)\b", text, re.I)
         check("source and date cited", "cedar-current.md" in text and cited_date, text)
         check("superseded decision excluded", not re.search(r"\b120\b", text) or bool(re.search(r"supersed|replac|old|previous", text, re.I)), text)
-        calls = tool_calls(events)
         bounded = []
-        for call in calls:
-            command = call.get("input", {}).get("command", "")
-            if "cedar-current.md" in command:
-                if (" read " in command and "--lines" in command) or "sed -n" in command or "head -" in command:
-                    bounded.append(call)
+        for call in tool_calls(events, successful_only=False):
+            command, output = call["input"]["command"], call["output"]
+            targeted = "cedar-current.md" in command and (
+                (" read " in command and "--lines" in command) or "sed -n" in command
+                or "head -" in command or "cat " in command)
+            # A focused read of this short note is proportionate. In a composite
+            # command the final status can describe a trailing, unrelated action.
+            if targeted and "Cedar sync window" in output and "73 seconds" in output:
+                bounded.append(call)
         check("bounded source retrieval observed", bounded, bounded)
     elif case_id == "query-evidence":
         check("implementation unchanged", digest(cwd / "app.py") == context["source_hash"], "app.py SHA-256 compared with setup")
@@ -248,4 +255,6 @@ def grade(case_id, context, events):
         design = cwd / ".artifacts/design.md"
         check("derived peak consistent", consistent and design.is_file() and bool(design.read_text().strip()),
               {"load": load, "expected_peak": expected})
+    elif case_id in skill_value_cases.SOURCES:
+        skill_value_cases.grade(case_id, context, events, check, git)
     return checks

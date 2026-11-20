@@ -10,8 +10,11 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "evals/run_outcome_evals.py"
-CASE_COUNT = sum(len(json.loads((ROOT / "evals" / name).read_text()))
-                 for name in ("outcome_contracts.json", "outcome_contracts.codex.json"))
+CONTRACTS = {case: contract for name in ("outcome_contracts.json", "outcome_contracts.codex.json")
+             for case, contract in json.loads((ROOT / "evals" / name).read_text()).items()}
+ORIGINAL_CASES = ("assigned-worktree", "audit-scope", "memory-recall", "query-evidence",
+                  "routine-control", "data-rehearsal", "design-sizing", "design-control")
+CASE_COUNT = len(ORIGINAL_CASES)
 FAKE = '''#!/usr/bin/env python3
 import json, os, pathlib, subprocess, sys, time
 if "--version" in sys.argv:
@@ -28,7 +31,11 @@ with open(os.environ["CALL_LOG"], "a") as stream:
 def command(text, output=""):
     print(json.dumps({"type":"item.completed","item":{"type":"command_execution","command":text,"exit_code":0,"aggregated_output":output}}))
 print(json.dumps({"type":"thread.started","thread_id":"fake-thread"}))
-if (arm == "enabled" and case not in ("routine-control", "design-control")) or mode == "contaminated":
+if mode == "contaminated" and arm == "disabled":
+    frozen = next(p / "candidates" / skill / "SKILL.md" for p in pathlib.Path.cwd().parents
+                  if (p / "candidates").is_dir())
+    command("cat " + str(frozen))
+elif (arm == "enabled" and case not in ("routine-control", "design-control")) or mode in ("contaminated", "deleted"):
     command("cat " + str(pathlib.Path.cwd() / ".agents/skills" / skill / "SKILL.md"))
 pathlib.Path(".artifacts").mkdir(exist_ok=True)
 if case == "assigned-worktree":
@@ -54,7 +61,7 @@ elif case == "memory-recall":
     vault=pathlib.Path(os.environ["CODEX_MEMORY_VAULT"])
     note=next(vault.rglob("cedar-current.md"))
     pathlib.Path(".artifacts/recall.md").write_text("73 seconds; 90-second lease, 17 seconds for retries. Source: " + str(note.relative_to(vault)) + " dated 2026-10-15.")
-    command("python3 .agents/skills/vault-memory/scripts/memory.py read " + str(note.relative_to(vault)) + " --lines 1:30")
+    command("python3 .agents/skills/vault-memory/scripts/memory.py read " + str(note.relative_to(vault)) + " --lines 1:30", note.read_text())
 elif case == "data-rehearsal":
     results = []
     for profile in ("sanitized", "legacy-shape"):
@@ -107,7 +114,7 @@ class OutcomeTests(unittest.TestCase):
         return proc, records
 
     def test_real_grading_isolated_pairs_snapshot_identity_and_native_controls(self):
-        proc, records = self.run_evals()
+        proc, records = self.run_evals(*(arg for case in ORIGINAL_CASES for arg in ("--case", case)))
         runs = [r for r in records if r["type"] == "case"]
         failures = [{"case": r["case"], "arm": r["arm"], "error": r.get("error"),
                      "checks": [c for c in r.get("checks", []) if not c["passed"]]}
@@ -214,6 +221,29 @@ class OutcomeTests(unittest.TestCase):
             self.assertEqual(check["evidence"]["fetch_head"], "")
             self.assertTrue(check["evidence"]["successful_fetch_commands"])
 
+    def test_missing_skill_path_does_not_contaminate(self):
+        proc, records = self.run_evals("--case", "memory-recall",
+                                      outcomes={"memory-recall:disabled": "deleted"})
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        disabled = next(r for r in records if r.get("arm") == "disabled" and r["type"] == "case")
+        self.assertFalse(disabled["skill_read"])
+
+    def test_round_order_and_resume_mid_pair(self):
+        proc, _ = self.run_evals("--case", "design-control", "--runs", "3",
+                                 "--token-budget", "300")
+        self.assertEqual(proc.returncode, 1)
+        proc, records = self.run_evals("--resume", str(self.root / "run"),
+                                       "--token-budget", "1000")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual([c["arm"] for c in self.calls()],
+                         ["enabled", "disabled", "disabled", "enabled", "enabled", "disabled"])
+        self.assertEqual(len({c["cwd"] for c in self.calls()}), 6)
+        self.assertEqual(records[-1]["comparable_pairs"], 3)
+        self.assertEqual(records[-1]["per_case"]["design-control"]["enabled"]["pass"], 3)
+        self.assertEqual(records[-1]["per_case_usage"]["design-control"]["enabled"],
+                         dict(observed_tokens=360, unknown_usage_attempts=0,
+                              skill_reads=0, blocked_commands=0))
+
     def test_timeout_retains_reported_usage_but_never_scores_success(self):
         proc, records = self.run_evals("--case", "audit-scope", "--timeout", "1",
                                       outcomes={"audit-scope:enabled": "timeout"})
@@ -233,7 +263,7 @@ class OutcomeTests(unittest.TestCase):
     def test_list_invalid_limits_and_existing_output_do_not_start_model_calls(self):
         proc, records = self.run_evals("--list")
         self.assertEqual(proc.returncode, 0)
-        self.assertEqual(len(json.loads(proc.stdout)), CASE_COUNT)
+        self.assertEqual(len(json.loads(proc.stdout)), len(CONTRACTS))
         for option in ("--timeout", "--token-budget"):
             for value in ("0", "-1"):
                 proc, _ = self.run_evals(option, value)

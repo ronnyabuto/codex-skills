@@ -22,5 +22,135 @@
       "arithmetic outcomes corrected",
       "unrelated skill not used"
     ]
+  },
+  "shared-imports": {
+    "skill": "code-structure",
+    "query": "Web and worker shipment counts both omit delivered shipments. Fix both entry points and put the shared shipment rule where it belongs. Billing should continue to count only shipped rows.",
+    "deliverable": "",
+    "checks": [
+      "both shipment entry points accept delivered",
+      "billing preserves its distinct policy",
+      "shipment owns the rule"
+    ]
+  },
+  "pinned-delivery": {
+    "skill": "current-docs",
+    "query": "Fix the broken parcel SDK call so dispatch makes two retries using the dependency pinned in this checkout. Local vendor docs for more than one version are available.",
+    "deliverable": "Save .artifacts/result.json as {\"file\": string, \"line\": integer} citing the applicable SDK contract.",
+    "checks": [
+      "dispatch uses pinned API with two retries",
+      "SDK and lock unchanged",
+      "pinned source cited"
+    ],
+    "held_out": true
+  },
+  "polish-export": {
+    "skill": "no-ai-tells",
+    "query": "Polish the narration in export.py. Clean up boilerplate comments while preserving behavior and meaningful constraints. Review only that file.",
+    "deliverable": "",
+    "checks": [
+      "redundant comment removed from export.py",
+      "concatenation contract retained",
+      "excluded source unchanged"
+    ]
+  },
+  "polish-package": {
+    "skill": "no-ai-tells-audit",
+    "query": "Clean up redundant boilerplate comments across this package. Preserve behavior and comments that explain real constraints. Generated sources are excluded.",
+    "deliverable": "",
+    "checks": [
+      "redundant comment removed from orders.py",
+      "redundant comment removed from refunds.py",
+      "behavior and identifier constraint retained",
+      "excluded source unchanged"
+    ]
+  },
+  "refund-health": {
+    "skill": "project-audit",
+    "query": "Audit this small order package. Report the most consequential confirmed defect and demonstrate it using an order paid 60 cents with 20 already refunded. If a negative amount is relevant, use -5 cents. Leave all source unchanged.",
+    "deliverable": "Save .artifacts/result.json as {\"file\": string, \"line\": integer, \"input\": integer, \"actual_refunded\": integer, \"expected_refunded\": integer}.",
+    "checks": [
+      "audit is read only",
+      "actual defect is located",
+      "rejection and unchanged state expected"
+    ]
+  },
+  "legacy-reader": {
+    "skill": "understand-before-changing",
+    "query": "Fix the case corruption in shipment codes. The normalization looks unnecessary, but check what the reader and its callers already rely on before changing it.",
+    "deliverable": "",
+    "checks": [
+      "new codes preserve case",
+      "old row fallback retained",
+      "tombstone suppresses fallback"
+    ]
+  },
+  "startup-delay": {
+    "skill": "ux-speed-audit",
+    "query": "Measure and diagnose why the CLI feels slow when asking for its version. Run at least five comparable trials and leave the app unchanged.",
+    "deliverable": "Save .artifacts/result.json as {\"file\": string, \"line\": integer, \"seconds\": [number], \"median\": number, \"range\": [min, max]}.",
+    "checks": [
+      "app unchanged",
+      "hot path identified",
+      "retained startup measurements"
+    ]
+  },
+  "checkout-audit": {
+    "skill": "managed-audit",
+    "query": "Lead an audit of the checkout total. Investigate a cart with a 25-cent line and a 30-cent promotion. Report the confirmed defect and any limitation on delegating. Leave the project unchanged.",
+    "deliverable": "Save .artifacts/result.json as {\"file\": string, \"line\": integer, \"actual_total\": integer, \"expected_total\": integer}.",
+    "checks": [
+      "audit is read only",
+      "actual defect is located",
+      "bad checkout state reproduced"
+    ],
+    "held_out": true
+  },
+  "hold-expiry": {
+    "skill": "new-feature",
+    "query": "Start a feature branch in project/ for this task. Fix hold expiry so a hold is inactive at its exact expiry time. Leave the change uncommitted.",
+    "deliverable": "",
+    "checks": [
+      "fresh branch uses remote tip",
+      "local main unchanged",
+      "expiry boundary corrected"
+    ],
+    "held_out": true
+  },
+  "lease-recall": {
+    "skill": "vault-memory",
+    "query": "What did we decide in the prior Orchid Refresh session about refresh timing and partner expiry?",
+    "deliverable": "Save .artifacts/result.json as {\"refresh_minutes\": integer, \"expiry_minutes\": integer, \"source\": string} with the source basename.",
+    "checks": [
+      "current decision recovered",
+      "specific current source cited"
+    ],
+    "held_out": true
+  },
+  "recovery-evidence": {
+    "skill": "evidence-driven-testing",
+    "query": "Show what the dispatcher actually does when the first send times out but the next works, and when all sends time out. Leave the dispatcher unchanged.",
+    "deliverable": "Keep a replayable .artifacts/probe.py and save .artifacts/result.json as {\"recovered\": [final state, calls], \"exhausted\": [final state, calls]}. The probe must print that JSON.",
+    "checks": [
+      "implementation unchanged",
+      "probe replays both outcomes"
+    ],
+    "held_out": true
+  },
+  "relay-recovery": {
+    "skill": "system-reasoning",
+    "query": "Design the webhook sender around the fulfillment requirements in README.md. Give a workable policy for lost acknowledgements and a way to back out the rollout. Keep project source unchanged.",
+    "deliverable": "Save .artifacts/result.json as {\"send_timeout_seconds\": number, \"last_retry_hours\": number, \"reuse_event_id\": boolean, \"rollback\": {\"sender_enabled\": boolean, \"pending_events_retained\": boolean, \"orders_enabled\": boolean}}. Record any further design details in .artifacts/design.md.",
+    "checks": [
+      "proposal only",
+      "send bounded under caller deadline",
+      "retry stays inside deduplication window",
+      "rollback pauses sending and preserves pending orders"
+    ],
+    "held_out": true,
+    "review": [
+      "The design handles commit-to-send handoff and acknowledgement loss without violating the retention window.",
+      "Rollback explanation agrees with the structured policy."
+    ]
   }
 }
