@@ -19,7 +19,7 @@ synthetic starting state. Select the same exact model and effort for both arms:
 
 ```bash
 python3 -B evals/run_outcome_evals.py --model gpt-6.2-sol --effort medium \
-  --case design-sizing --case design-control --token-budget 250000
+  --case design-sizing --case design-control --runs 3 --token-budget 250000
 ```
 
 Without `--model`, the runner reads the selected user model. It does not inherit
@@ -36,6 +36,26 @@ settings are recorded; they are not proof of the server's effective settings.
 | `routine-control` | Fix arithmetic without activating unrelated documentation guidance |
 | `design-sizing` | Preserve source and derive consistent daily/peak arithmetic; leave design quality for review |
 | `design-control` | Fix arithmetic without activating system-reasoning |
+| `shared-imports` | Reuse the shipment rule through both callers and preserve billing policy |
+| `pinned-delivery` | Cite the pinned contract and exercise the actual SDK call |
+| `polish-export` | Remove redundant narration while retaining export behavior and scope |
+| `polish-package` | Clean up multiple modules while retaining behavior and generated sources |
+| `refund-health` | Locate and reproduce an invalid refund state without editing source |
+| `legacy-reader` | Restore case preservation while keeping fallback and tombstones |
+| `startup-delay` | Identify the blocking startup path and report a measured distribution |
+| `checkout-audit` | Locate the checkout defect and reproduce the incorrect total |
+| `hold-expiry` | Branch from a genuinely newer local remote tip and fix the expiry boundary |
+| `lease-recall` | Recover the current decision from a local session with a superseded decoy |
+| `recovery-evidence` | Replay delivery after a transient failure and after retry exhaustion |
+| `relay-recovery` | Bound calls, respect deduplication retention and back out sending safely |
+
+Contracts marked `held_out` were written for this comparison. Use the pilot
+to review graders and isolation in both arms. Preserve the original pilot when
+correcting a grader, then run blind repetitions without changing the candidate
+skills. A control case measures unnecessary activation and doesn't establish
+value on a task that needs the skill. The managed audit fixtures exercise
+direct investigation when workers are unavailable. The current-docs fixture
+uses local vendor documentation and does not measure online research.
 
 The six common contracts remain in `outcome_contracts.json`; Codex-only cases
 live in `outcome_contracts.codex.json`. Duplicate names are rejected. Only the
@@ -52,6 +72,11 @@ pass is not a completed design review.
 
 ## Limits and resume
 
+`--runs N` creates N fresh pairs per case. Cases run in rounds and the first arm
+of each pair alternates between rounds. `summary.json` includes per-case pass counts, observed tokens, skill reads, and command
+blocks by arm. Round one uses the original case directories. Later rounds get their
+own `round-N` directories, and retries preserve the original round and attempt.
+
 `--timeout` defaults to 180 seconds per CLI process; POSIX cleanup kills the
 process group. `--token-budget` defaults to 60,000 reported input + output tokens
 per invocation. It controls admission after an arm completes, not the tokens of
@@ -63,11 +88,11 @@ are not limit signals. Other errors, missing usage and an exhausted admission
 budget also stop new launches. Resume unfinished or limited work later:
 
 ```bash
-python3 -B evals/run_outcome_evals.py --resume /tmp/codex-skill-outcomes-RUN \
+python3 -B evals/run_outcome_evals.py --resume ~/agent-eval-runs/codex-skill-outcomes-RUN \
   --token-budget 250000
 ```
 
-Resume preserves model, effort, timeout and cases. Only the new invocation's
+Resume preserves model, effort, timeout, cases and repetition count. Only the new invocation's
 admission allowance may change. It rejects changed client versions, evaluation
 code, fixture bytes, contract definitions or frozen candidates before launching.
 Passing/failed terminal outcomes are not rerun. Missing, skipped, limited and
@@ -88,7 +113,7 @@ rubric failures. Pending design reviews remain explicitly reported.
 
 Each run freezes selected skills under `candidates/` and records hashes, settings,
 native events, stderr, answers, fixtures and grading evidence. Outputs default
-to a private new `/tmp/codex-skill-outcomes-*` directory; explicit destinations
+to a private new `~/agent-eval-runs/codex-skill-outcomes-*` directory; explicit destinations
 must be new and outside Git worktrees.
 
 Each arm gets a temporary `CODEX_HOME` with only a link to existing authentication
@@ -96,7 +121,12 @@ when available. No credentials are retained in the evidence tree. Session-only
 controls disable bundled skills, plugins, hooks, apps, memory, delegation,
 browser/web search, standing instruction loading and user rules/configuration.
 The disabled entry point is also omitted; helper files stay available. Shell
-commands use workspace-write sandboxing without approval bypass.
+commands use workspace-write sandboxing without per-command prefix rules.
+Inspect the retained blocked command records and per-arm counts before trusting
+a comparison. The counts flag denial text in command results and require
+transcript review to tell runner restrictions from ordinary program errors.
+The read detector matches observed shell readers against actual skill files.
+Naming an absent entry point is not evidence of contamination.
 
 These controls isolate ordinary first-party Codex sessions, not the operating
 system or managed policy. Use trusted candidates and inspect transcripts before
