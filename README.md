@@ -40,7 +40,9 @@ installs through supported `codex plugin` commands and verifies cached resources
 It refuses modified release sources, conflicting marketplace names and unknown
 duplicates. Verification lists only the local marketplace; CLI calls are bounded
 to 120 seconds. Run upgrades from the Git checkout; do not edit the plugin cache.
-Restart Codex after a plugin upgrade.
+The installer enables the plugin in the user-level Codex home, so it is available
+across local workspaces using that home. Restart open Codex sessions to refresh
+their plugin context.
 
 `--migrate-duplicates` backs up only recognized byte-identical standalone skills
 after verifying the plugin. Other clients' settings and skills are neither inspected nor changed.
@@ -74,10 +76,9 @@ prose. See [memory commands and limits](plugins/ronny-codex-skills/skills/vault-
 
 ## Verification and maintenance
 
-Python 3.11+ runs the evaluation harness; memory and the optional foreground
-recorder use Python 3.10+. Memory requires SQLite FTS5 and window functions.
-The recorder requires FFmpeg with libx264; no recorder binary is bundled.
-The paired runner requires Codex CLI 0.170.0+.
+The evaluation harness requires Python 3.11+ and Codex CLI 0.170.0+. Memory
+requires Python 3.10+ and SQLite FTS5 with window functions. This package
+excludes the inherited recorder.
 
 ```bash
 python3 scripts/build_release.py
@@ -88,7 +89,9 @@ python3 -B -m unittest discover -s tests -v
 
 Rebuild the inventory after public source changes. Tests use synthetic state;
 live model evaluations consume usage and run only when requested. Inspect cases
-without a model call using `python3 -B evals/run_outcome_evals.py --list`.
+without a model call using `python3 -B evals/run_outcome_evals.py --list`. The
+paired runner covers all 12 skills, supports fresh rounds with `--runs N`, and
+resumes from private evidence under `~/agent-eval-runs/` by default.
 
 - [Evaluation, resume and grading limits](evals/README.md)
 - [Current compatibility](references/codex-compatibility.md)

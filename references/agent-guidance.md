@@ -4,12 +4,12 @@ Before finishing, remove redundant comments and scaffolding and follow local nam
 Verify changes at the affected boundary with proportionate checks; retain reproducible evidence when warranted.
 Permanent tests should protect meaningful uncovered behavior or regression risk; scratch checks need not be committed.
 Use representative state transitions and outcomes, including relevant failure/recovery paths. Preserve useful older tests.
-Once the requested behavior and relevant checks pass, stop unless a change, failure or unresolved risk warrants more verification.
+Reuse valid checks. Stop once the requested behavior passes unless a change, failure or unresolved risk warrants more verification.
 
 For new implementation tasks in Git, use `new-feature` once, preserving assigned
 worktrees and ongoing work. Concurrent writers need separate worktrees; measure
 performance without competing workloads. Use `current-docs` for uncertain,
-version-sensitive integrations, not stable syntax or standard-library work.
+version-sensitive integrations. Load other skills only when the task calls for them.
 
 Use the installed `system-reasoning` skill for architectural tradeoffs,
 unexplained bottlenecks, and recurring or unclear bugs. Establish requirements
