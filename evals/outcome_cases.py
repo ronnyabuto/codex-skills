@@ -197,7 +197,7 @@ def grade(case_id, context, events):
         bounded = []
         for call in tool_calls(events, successful_only=False):
             command, output = call["input"]["command"], call["output"]
-            targeted = "cedar-current.md" in command and (
+            targeted = any(name in command for name in ("cedar-current.md", "cedar-*.md")) and (
                 (" read " in command and "--lines" in command) or "sed -n" in command
                 or "head -" in command or "cat " in command or "nl " in command or "rg " in command)
             # A focused read of this short note is proportionate. In a composite

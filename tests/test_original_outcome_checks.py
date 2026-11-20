@@ -114,6 +114,9 @@ class OriginalCases(unittest.TestCase):
             ("rg -n '^' ../vault/codex/notes/project-synthetic/cedar-current.md "
              "../vault/codex/notes/project-synthetic/cedar-old.md",
              f"../vault/codex/notes/project-synthetic/cedar-current.md:8:{source_line}"),
+            ('cat ../request.json; for f in ../vault/codex/notes/*/cedar-*.md; '
+             'do sed -n \'1,180p\' "$f"; done',
+             f"date: 2026-10-15\n---\n# Cedar sync window\n\n{source_line}"),
         ):
             with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
                 context = prepare("memory-recall", Path(directory))
